@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/lib/api/auth-context"
 import { LoginForm } from "@/components/login-form"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 import { useEffect } from "react"

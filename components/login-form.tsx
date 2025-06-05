@@ -1,17 +1,16 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/lib/api/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function LoginForm() {
-  const [email, setEmail] = useState("")
+  const [emailOrMobile, setEmailOrMobile] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -23,9 +22,9 @@ export function LoginForm() {
     setError("")
 
     try {
-      await login(email, password)
+      await login(emailOrMobile, password)
     } catch (err) {
-      setError("Invalid credentials. Please try again.")
+      setError(err instanceof Error ? err.message : "An error occurred during login")
     } finally {
       setIsLoading(false)
     }
@@ -46,13 +45,13 @@ export function LoginForm() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="emailOrMobile">Email or Mobile</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="admin@jockey.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="emailOrMobile"
+                type="text"
+                placeholder="admin@jockey.com or 6200134797"
+                value={emailOrMobile}
+                onChange={(e) => setEmailOrMobile(e.target.value)}
                 required
               />
             </div>

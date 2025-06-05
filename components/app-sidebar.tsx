@@ -1,7 +1,7 @@
 "use client"
 
 import type * as React from "react"
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/lib/api/auth-context"
 import {
   Building2,
   Users,

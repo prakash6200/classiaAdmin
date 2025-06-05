@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/lib/api/auth-context"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"

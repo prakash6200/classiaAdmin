@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/lib/auth-context"
+import { useAuth } from "@/lib/api/auth-context"
 import { OverviewCards } from "@/components/dashboard/overview-cards"
 import { AnalyticsCharts } from "@/components/dashboard/analytics-charts"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
