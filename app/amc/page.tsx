@@ -1,15 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/lib/api/auth-context"
+import { useAMCContext } from "@/lib/api/amc-context"
+import { AuthenticatedLayout } from "@/components/authenticated-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, Plus, MoreHorizontal, Building2, Users, TrendingUp } from "lucide-react"
-import { AuthenticatedLayout } from "@/components/authenticated-layout"
+import { Search, Plus, MoreHorizontal, Building2, Users, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface AMC {
   id: string
@@ -22,42 +24,15 @@ interface AMC {
   registrationDate: string
 }
 
-const mockAMCs: AMC[] = [
-  {
-    id: "1",
-    name: "HDFC Asset Management",
-    status: "active",
-    aum: "₹2.4B",
-    distributors: 45,
-    funds: 23,
-    registrationDate: "2023-01-15",
-  },
-  {
-    id: "2",
-    name: "ICICI Prudential AMC",
-    status: "active",
-    aum: "₹1.8B",
-    distributors: 38,
-    funds: 19,
-    registrationDate: "2023-02-20",
-  },
-  {
-    id: "3",
-    name: "SBI Mutual Fund",
-    status: "pending",
-    aum: "₹0",
-    distributors: 0,
-    funds: 0,
-    registrationDate: "2024-01-10",
-  },
-]
-
 export default function AMCPage() {
   const { hasPermission } = useAuth()
+  const { amcs, pagination, loading, error, fetchAMCs } = useAMCContext()
   const [searchTerm, setSearchTerm] = useState("")
-  const [amcs] = useState<AMC[]>(mockAMCs)
 
-  const filteredAMCs = amcs.filter((amc) => amc.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  useEffect(() => {
+    console.log("Fetching AMCs with search term:", searchTerm)
+    fetchAMCs(1, 10, searchTerm)
+  }, [fetchAMCs, searchTerm])
 
   const getStatusBadge = (status: AMC["status"]) => {
     switch (status) {
@@ -113,8 +88,8 @@ export default function AMCPage() {
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{amcs.length}</div>
-              <p className="text-xs text-muted-foreground">{amcs.filter((a) => a.status === "active").length} active</p>
+              <div className="text-2xl font-bold">{loading ? "..." : pagination.total}</div>
+              <p className="text-xs text-muted-foreground">{loading ? "..." : amcs.filter((a) => a.status === "active").length} active</p>
             </CardContent>
           </Card>
           <Card>
@@ -123,7 +98,9 @@ export default function AMCPage() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₹4.2B</div>
+              <div className="text-2xl font-bold">
+                {loading ? "..." : `₹${amcs.reduce((sum: number, a: AMC) => sum + parseFloat(a.aum.replace("₹", "").replace(",", "")), 0).toLocaleString("en-IN")}`}
+              </div>
               <p className="text-xs text-muted-foreground">Across all AMCs</p>
             </CardContent>
           </Card>
@@ -133,11 +110,18 @@ export default function AMCPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">83</div>
+              <div className="text-2xl font-bold">{loading ? "..." : amcs.reduce((sum: number, a: AMC) => sum + a.distributors, 0)}</div>
               <p className="text-xs text-muted-foreground">Selling AMC funds</p>
             </CardContent>
           </Card>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         {/* AMC Table */}
         <Card>
@@ -157,46 +141,81 @@ export default function AMCPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>AMC Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>AUM</TableHead>
-                  <TableHead>Distributors</TableHead>
-                  <TableHead>Funds</TableHead>
-                  <TableHead>Registration Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAMCs.map((amc) => (
-                  <TableRow key={amc.id}>
-                    <TableCell className="font-medium">{amc.name}</TableCell>
-                    <TableCell>{getStatusBadge(amc.status)}</TableCell>
-                    <TableCell>{amc.aum}</TableCell>
-                    <TableCell>{amc.distributors}</TableCell>
-                    <TableCell>{amc.funds}</TableCell>
-                    <TableCell>{new Date(amc.registrationDate).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          {hasPermission("amc:update") && <DropdownMenuItem>Edit AMC</DropdownMenuItem>}
-                          {hasPermission("amc:commission") && <DropdownMenuItem>Commission Setup</DropdownMenuItem>}
-                          <DropdownMenuItem>View Reports</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {loading ? (
+              <div className="text-center text-muted-foreground">Loading AMCs...</div>
+            ) : amcs.length === 0 ? (
+              <div className="text-center text-muted-foreground">No AMCs found</div>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>AMC Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>AUM</TableHead>
+                      <TableHead>Distributors</TableHead>
+                      <TableHead>Funds</TableHead>
+                      <TableHead>Registered</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {amcs.map((amc) => (
+                      <TableRow key={amc.id}>
+                        <TableCell className="font-medium">{amc.name}</TableCell>
+                        <TableCell>{getStatusBadge(amc.status)}</TableCell>
+                        <TableCell>{amc.aum}</TableCell>
+                        <TableCell>{amc.distributors}</TableCell>
+                        <TableCell>{amc.funds}</TableCell>
+                        <TableCell>{new Date(amc.registrationDate).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>View Details</DropdownMenuItem>
+                              {hasPermission("amc:update") && <DropdownMenuItem>Edit AMC</DropdownMenuItem>}
+                              {hasPermission("amc:commission") && <DropdownMenuItem>Commission Setup</DropdownMenuItem>}
+                              <DropdownMenuItem>View Reports</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {/* Pagination Controls */}
+                <div className="flex items-center justify-between mt-4">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+                    {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} AMCs
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchAMCs(pagination.page - 1, pagination.limit, searchTerm)}
+                      disabled={pagination.page === 1 || loading}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchAMCs(pagination.page + 1, pagination.limit, searchTerm)}
+                      disabled={pagination.page * pagination.limit >= pagination.total || loading}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
