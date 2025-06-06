@@ -10,7 +10,8 @@ export default function HomePage() {
 
   useEffect(() => {
     if (user) {
-      // Redirect to dashboard if user is logged in
+      console.log(`User logged in with role: ${user.role}, redirecting to /dashboard`)
+      // Redirect to dashboard for all roles
       window.location.href = "/dashboard"
     }
   }, [user])

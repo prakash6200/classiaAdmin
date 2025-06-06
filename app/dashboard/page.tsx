@@ -9,10 +9,12 @@ import { Button } from "@/components/ui/button"
 import { Bell, Download, RefreshCw } from "lucide-react"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 
+
 export default function DashboardPage() {
   const { user } = useAuth()
 
   const getRoleSpecificContent = () => {
+    console.log("User role in dashboard:", user?.role)
     switch (user?.role) {
       case "super_admin":
       case "admin":
@@ -92,8 +94,50 @@ export default function DashboardPage() {
             </Card>
           </div>
         )
+      case "user":
+        return (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Balance</CardTitle>
+                <CardDescription>Main account balance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">₹{user?.mainBalance?.toLocaleString() || 0}</div>
+                <p className="text-xs text-muted-foreground">Available funds</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Transactions</CardTitle>
+                <CardDescription>Your latest investments</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">5</div>
+                <p className="text-xs text-muted-foreground">Transactions this month</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Portfolio Performance</CardTitle>
+                <CardDescription>Year-to-date returns</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">+12.5%</div>
+                <p className="text-xs text-muted-foreground">Annualized return</p>
+              </CardContent>
+            </Card>
+          </div>
+        )
       default:
-        return null
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Welcome to Your Dashboard</CardTitle>
+              <CardDescription>No specific content available for your role.</CardDescription>
+            </CardHeader>
+          </Card>
+        )
     }
   }
 

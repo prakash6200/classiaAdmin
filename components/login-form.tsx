@@ -80,19 +80,16 @@ export function LoginForm() {
             <p className="font-medium mb-2">Demo Accounts:</p>
             <div className="space-y-1 text-xs">
               <p>
-                <strong>Super Admin:</strong> super@admin.com
+                <strong>Super Admin:</strong> superadmin@classiacapital.com
               </p>
               <p>
-                <strong>Admin:</strong> admin@jockey.com
+                <strong>Admin:</strong> admin@classiacapital.com
               </p>
               <p>
-                <strong>AMC:</strong> amc@example.com
+                <strong>AMC:</strong> amc1@classiacapital.com
               </p>
               <p>
-                <strong>Distributor:</strong> distributor@example.com
-              </p>
-              <p>
-                <strong>Password:</strong> password
+                <strong>Distributor:</strong> distributor@classiacapital.com
               </p>
             </div>
           </div>

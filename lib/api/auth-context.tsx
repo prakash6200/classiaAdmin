@@ -4,13 +4,13 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import type { User, AuthContextType } from "@/types/auth"
 
-// Define permission mapping for roles
+// Define permission mapping for roles, matching DashboardPage's expected roles
 const rolePermissions: Record<string, string[]> = {
-  SUPER_ADMIN: ["*"],
-  ADMIN: ["amc:*", "distributor:*", "user:*", "transaction:*", "course:*"],
-  AMC: ["amc:read", "amc:update", "distributor:read", "transaction:read"],
-  DISTRIBUTOR: ["course:read", "transaction:read", "user:read"],
-  USER: ["user:read", "transaction:read"], // Default permissions for USER role
+  super_admin: ["*"],
+  admin: ["amc:*", "distributor:*", "user:*", "transaction:*", "course:*"],
+  amc: ["amc:read", "amc:update", "distributor:read", "transaction:read"],
+  distributor: ["course:read", "transaction:read", "user:read"],
+  user: ["user:read", "transaction:read"], // Default permissions for USER role
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -23,7 +23,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const storedUser = localStorage.getItem("jockey-user")
     const storedToken = localStorage.getItem("jockey-token")
     if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser))
+      const parsedUser = JSON.parse(storedUser)
+      setUser(parsedUser)
+      console.log("Loaded stored user:", parsedUser)
+      console.log("Loaded stored token:", storedToken)
     }
   }, [])
 
@@ -37,6 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       formData.append("password", password)
 
+      console.log("Sending login request with:", formData.toString())
+
       const response = await fetch("https://api.classiacapital.com/auth/login", {
         method: "POST",
         headers: {
@@ -45,17 +50,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: formData.toString(),
       })
 
+      const result = await response.json()
+      console.log("API Response:", result)
+
       if (!response.ok) {
-        throw new Error("Invalid credentials")
+        throw new Error(result.message || "Invalid credentials")
       }
 
-      const result = await response.json()
       if (!result.status) {
         throw new Error(result.message || "Login failed")
       }
 
       const apiUser = result.data.user
       const token = result.data.token
+      console.log("API User Data:", apiUser)
+      console.log("API Token:", token)
+
+      // Map API roles to internal roles
+      const roleMap: Record<string, string> = {
+        "SUPER-ADMIN": "super_admin",
+        DISTRIBUTOR: "distributor",
+        USER: "user",
+        ADMIN: "admin",
+        AMC: "amc",
+      }
+
+      const mappedRole = roleMap[apiUser.Role] || "user" // Fallback to user
 
       // Map API user to internal User type
       const user: User = {
@@ -63,14 +83,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name: apiUser.Name,
         email: apiUser.Email || "",
         mobile: apiUser.Mobile || "",
-        role: apiUser.Role.toLowerCase(), // Normalize role to lowercase
-        permissions: rolePermissions[apiUser.Role] || rolePermissions.USER, // Assign permissions based on role
+        role: mappedRole,
+        permissions: rolePermissions[mappedRole] || rolePermissions.user,
+        amcId: apiUser.Role === "AMC" ? apiUser.ID.toString() : undefined,
+        distributorId: apiUser.Role === "DISTRIBUTOR" ? apiUser.ID.toString() : undefined,
       }
+
+      console.log("Mapped User:", user)
+      console.log("Assigned Permissions:", user.permissions)
 
       setUser(user)
       localStorage.setItem("jockey-user", JSON.stringify(user))
       localStorage.setItem("jockey-token", token)
     } catch (error) {
+      console.error("Login Error:", error)
       throw new Error(error instanceof Error ? error.message : "An error occurred")
     }
   }
@@ -79,12 +105,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     localStorage.removeItem("jockey-user")
     localStorage.removeItem("jockey-token")
+    console.log("User logged out")
   }
 
   const hasPermission = (permission: string): boolean => {
-    if (!user) return false
-    if (user.permissions.includes("*")) return true
-    return user.permissions.some((p) => p === permission || (p.endsWith(":*") && permission.startsWith(p.slice(0, -1))))
+    if (!user) {
+      console.log(`Permission check for ${permission}: No user logged in`)
+      return false
+    }
+    if (user.permissions.includes("*")) {
+      console.log(`Permission check for ${permission}: Allowed (super admin)`)
+      return true
+    }
+    const allowed = user.permissions.some(
+      (p) => p === permission || (p.endsWith(":*") && permission.startsWith(p.slice(0, -1)))
+    )
+    console.log(`Permission check for ${permission}: ${allowed ? "Allowed" : "Denied"}`, user.permissions)
+    return allowed
   }
 
   return (
