@@ -1,7 +1,6 @@
 "use client"
 
-import { useState } from "react"
-import { useAuth } from "@/lib/api/auth-context"
+import { useState, useEffect } from "react"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,7 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, Plus, MoreHorizontal, Users, CheckCircle, XCircle, Clock } from "lucide-react"
+import { Search, Plus, MoreHorizontal, Users, CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useAuth } from "@/lib/api/auth-context"
+import { useUserContext } from "@/lib/api/user-context"
 
 interface User {
   id: string
@@ -22,49 +24,14 @@ interface User {
   joinDate: string
 }
 
-const mockUsers: User[] = [
-  {
-    id: "1",
-    name: "Arjun Singh",
-    email: "arjun@example.com",
-    phone: "+91 98765 43210",
-    kycStatus: "verified",
-    investmentValue: "₹2.4L",
-    distributor: "Rajesh Kumar",
-    joinDate: "2023-01-15",
-  },
-  {
-    id: "2",
-    name: "Sneha Patel",
-    email: "sneha@example.com",
-    phone: "+91 87654 32109",
-    kycStatus: "pending",
-    investmentValue: "₹1.8L",
-    distributor: "Priya Sharma",
-    joinDate: "2023-02-20",
-  },
-  {
-    id: "3",
-    name: "Vikram Gupta",
-    email: "vikram@example.com",
-    phone: "+91 76543 21098",
-    kycStatus: "verified",
-    investmentValue: "₹3.2L",
-    distributor: "Rajesh Kumar",
-    joinDate: "2023-03-10",
-  },
-]
-
 export default function UsersPage() {
   const { hasPermission } = useAuth()
+  const { users, pagination, loading, error, fetchUsers } = useUserContext()
   const [searchTerm, setSearchTerm] = useState("")
-  const [users] = useState<User[]>(mockUsers)
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  useEffect(() => {
+    fetchUsers(1, 10, searchTerm)
+  }, [fetchUsers, searchTerm])
 
   const getKYCStatusBadge = (status: User["kycStatus"]) => {
     switch (status) {
@@ -131,7 +98,7 @@ export default function UsersPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{users.length}</div>
+              <div className="text-2xl font-bold">{pagination.total}</div>
               <p className="text-xs text-muted-foreground">Registered investors</p>
             </CardContent>
           </Card>
@@ -161,11 +128,20 @@ export default function UsersPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₹7.4L</div>
+              <div className="text-2xl font-bold">
+                ₹{users.reduce((sum: number, u: { investmentValue: string }) => sum + parseFloat(u.investmentValue.replace("₹", "").replace(",", "")), 0).toLocaleString("en-IN")}
+              </div>
               <p className="text-xs text-muted-foreground">Combined portfolio</p>
             </CardContent>
           </Card>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Users Table */}
         <Card>
@@ -176,7 +152,7 @@ export default function UsersPage() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search users..."
+                  placeholder="Search by name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
@@ -185,48 +161,83 @@ export default function UsersPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>KYC Status</TableHead>
-                  <TableHead>Investment</TableHead>
-                  <TableHead>Distributor</TableHead>
-                  <TableHead>Join Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.phone}</TableCell>
-                    <TableCell>{getKYCStatusBadge(user.kycStatus)}</TableCell>
-                    <TableCell>{user.investmentValue}</TableCell>
-                    <TableCell>{user.distributor}</TableCell>
-                    <TableCell>{new Date(user.joinDate).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Profile</DropdownMenuItem>
-                          <DropdownMenuItem>Investment History</DropdownMenuItem>
-                          {hasPermission("user:kyc") && <DropdownMenuItem>KYC Documents</DropdownMenuItem>}
-                          {hasPermission("user:update") && <DropdownMenuItem>Edit User</DropdownMenuItem>}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            {loading ? (
+              <div className="text-center text-muted-foreground">Loading users...</div>
+            ) : users.length === 0 ? (
+              <div className="text-center text-muted-foreground">No users found</div>
+            ) : (
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>KYC Status</TableHead>
+                      <TableHead>Investment</TableHead>
+                      <TableHead>Distributor</TableHead>
+                      <TableHead>Joined</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.name}</TableCell>
+                        <TableCell>{user.email}</TableCell>
+                        <TableCell>{user.phone}</TableCell>
+                        <TableCell>{getKYCStatusBadge(user.kycStatus)}</TableCell>
+                        <TableCell>{user.investmentValue}</TableCell>
+                        <TableCell>{user.distributor}</TableCell>
+                        <TableCell>{new Date(user.joinDate).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>View Profile</DropdownMenuItem>
+                              <DropdownMenuItem>Investment History</DropdownMenuItem>
+                              {hasPermission("user:kyc") && <DropdownMenuItem>KYC Documents</DropdownMenuItem>}
+                              {hasPermission("user:update") && <DropdownMenuItem>Edit User</DropdownMenuItem>}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {/* Pagination Controls */}
+                <div className="flex items-center justify-between mt-4">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+                    {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} users
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchUsers(pagination.page - 1, pagination.limit, searchTerm)}
+                      disabled={pagination.page === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fetchUsers(pagination.page + 1, pagination.limit, searchTerm)}
+                      disabled={pagination.page * pagination.limit >= pagination.total}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
