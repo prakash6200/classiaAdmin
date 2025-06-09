@@ -26,6 +26,7 @@ interface AMCContextType {
   loading: boolean
   error: string | null
   fetchAMCs: (page?: number, limit?: number, search?: string) => Promise<void>
+  createAMC: (data: { name: string; email: string; mobile: string; password: string }) => Promise<void>
 }
 
 const AMCContext = createContext<AMCContextType | undefined>(undefined)
@@ -72,21 +73,20 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
       const apiUsers = result.data.users
       const paginationData = result.data.pagination
 
-      // Filter for AMC role and map to AMC interface
       const mappedAMCs: AMC[] = apiUsers
         .filter((apiUser: any) => apiUser.Role === "AMC")
         .map((apiUser: any) => ({
           id: apiUser.ID.toString(),
           name: apiUser.Name,
-          logo: apiUser.ProfileImage || "", // Default to empty string
+          logo: apiUser.ProfileImage || "",
           status: apiUser.IsBlocked
             ? "inactive"
             : apiUser.UserKYC > 0
             ? "active"
             : "pending",
-          aum: `₹${(apiUser.MainBalance || 0).toLocaleString("en-IN")}`, // Using MainBalance as proxy
-          distributors: 0, // Default: Await API update
-          funds: 0, // Default: Await API update
+          aum: `₹${(apiUser.MainBalance || 0).toLocaleString("en-IN")}`,
+          distributors: 0,
+          funds: 0,
           registrationDate: apiUser.CreatedAt.split("T")[0],
         }))
 
@@ -105,8 +105,55 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  const createAMC = useCallback(
+    async (data: { name: string; email: string; mobile: string; password: string }) => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("jockey-token") : null
+        if (!token) {
+          throw new Error("No authentication token found")
+        }
+
+        const formData = new URLSearchParams()
+        formData.append("name", data.name)
+        formData.append("email", data.email)
+        formData.append("mobile", data.mobile)
+        formData.append("password", data.password)
+
+        const response = await fetch("https://api.classiacapital.com/admin/register-amc", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: formData.toString(),
+        })
+
+        const result = await response.json()
+        console.log("AMC Create API Response:", result)
+
+        if (!response.ok || !result.status) {
+          throw new Error(result.message || "Failed to create AMC")
+        }
+
+        // Refresh AMC list after creation
+        await fetchAMCs(1, 10)
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "An error occurred while creating AMC"
+        setError(errorMessage)
+        console.error("AMC Create Error:", err)
+        throw err // Re-throw to handle in UI
+      } finally {
+        setLoading(false)
+      }
+    },
+    [fetchAMCs]
+  )
+
   return (
-    <AMCContext.Provider value={{ amcs, pagination, loading, error, fetchAMCs }}>
+    <AMCContext.Provider value={{ amcs, pagination, loading, error, fetchAMCs, createAMC }}>
       {children}
     </AMCContext.Provider>
   )

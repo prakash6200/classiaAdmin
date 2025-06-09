@@ -1,9 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/api/auth-context"
+import { useAMCContext } from "@/lib/api/amc-context"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -12,9 +13,13 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Upload, FileText, CheckCircle, AlertCircle } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+
 
 export default function CreateAMCPage() {
+  const router = useRouter()
   const { hasPermission } = useAuth()
+  const { createAMC } = useAMCContext()
   const [formData, setFormData] = useState({
     name: "",
     pan: "",
@@ -27,8 +32,7 @@ export default function CreateAMCPage() {
     pincode: "",
     contactPerson: "",
     designation: "",
-    sebiLicense: "",
-    amlCertificate: "",
+    password: "",
   })
   const [documents, setDocuments] = useState({
     logo: null as File | null,
@@ -37,6 +41,7 @@ export default function CreateAMCPage() {
     incorporationCert: null as File | null,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [verificationStatus, setVerificationStatus] = useState({
     pan: "pending",
     email: "pending",
@@ -49,6 +54,7 @@ export default function CreateAMCPage() {
 
   const handleFileUpload = (field: string, file: File) => {
     setDocuments((prev) => ({ ...prev, [field]: file }))
+    console.log(`Uploaded ${field}:`, file.name) // Log for debugging
   }
 
   const verifyPAN = async () => {
@@ -64,12 +70,43 @@ export default function CreateAMCPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError(null)
 
-    // Mock submission
-    setTimeout(() => {
+    try {
+      // Call createAMC with required fields
+      await createAMC({
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.phone,
+        password: formData.password,
+      })
+
+      // Log additional fields and documents (for future API integration)
+      console.log("Additional fields not sent to API:", {
+        pan: formData.pan,
+        gstin: formData.gstin,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        contactPerson: formData.contactPerson,
+        designation: formData.designation,
+      })
+      console.log("Documents not sent to API:", documents)
+
+      // Mock file upload (await real API)
+      if (documents.logo || documents.sebiLicense || documents.amlCertificate || documents.incorporationCert) {
+        console.log("Pending file upload to https://api.classiacapital.com/admin/upload-document")
+      }
+
+      // Redirect to /amc
+      router.push("/amc")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "An error occurred while creating AMC"
+      setError(errorMessage)
+    } finally {
       setIsSubmitting(false)
-      alert("AMC created successfully!")
-    }, 2000)
+    }
   }
 
   if (!hasPermission("amc:create")) {
@@ -94,6 +131,12 @@ export default function CreateAMCPage() {
             <p className="text-muted-foreground">Register a new Asset Management Company</p>
           </div>
         </div>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
@@ -179,6 +222,18 @@ export default function CreateAMCPage() {
                       required
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password *</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    placeholder="Enter password"
+                    required
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -282,42 +337,64 @@ export default function CreateAMCPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>AMC Logo</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center relative">
                     <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600">Click to upload logo</p>
+                    <p className="text-sm text-gray-600">
+                      {documents.logo ? documents.logo.name : "Click to upload logo"}
+                    </p>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={(e) => e.target.files?.[0] && handleFileUpload("logo", e.target.files[0])}
-                      className="hidden"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label>SEBI License *</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center relative">
                     <FileText className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600">Upload SEBI license document</p>
+                    <p className="text-sm text-gray-600">
+                      {documents.sebiLicense ? documents.sebiLicense.name : "Upload SEBI license document"}
+                    </p>
                     <input
                       type="file"
                       accept=".pdf,.jpg,.png"
                       onChange={(e) => e.target.files?.[0] && handleFileUpload("sebiLicense", e.target.files[0])}
-                      className="hidden"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label>AML Certificate *</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center relative">
                     <FileText className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-600">Upload AML certificate</p>
+                    <p className="text-sm text-gray-600">
+                      {documents.amlCertificate ? documents.amlCertificate.name : "Upload AML certificate"}
+                    </p>
                     <input
                       type="file"
                       accept=".pdf,.jpg,.png"
                       onChange={(e) => e.target.files?.[0] && handleFileUpload("amlCertificate", e.target.files[0])}
-                      className="hidden"
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Incorporation Certificate</Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center relative">
+                    <FileText className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                    <p className="text-sm text-gray-600">
+                      {documents.incorporationCert ? documents.incorporationCert.name : "Upload incorporation certificate"}
+                    </p>
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.png"
+                      onChange={(e) => e.target.files?.[0] && handleFileUpload("incorporationCert", e.target.files[0])}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
                     />
                   </div>
                 </div>
@@ -362,8 +439,8 @@ export default function CreateAMCPage() {
 
           {/* Submit */}
           <div className="flex justify-end space-x-4">
-            <Button type="button" variant="outline">
-              Save as Draft
+            <Button type="button" variant="outline" onClick={() => router.push("/amc")}>
+              Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Creating AMC..." : "Create AMC"}

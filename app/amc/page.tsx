@@ -12,6 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Search, Plus, MoreHorizontal, Building2, Users, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useRouter } from "next/navigation"
+
 
 interface AMC {
   id: string
@@ -25,6 +27,7 @@ interface AMC {
 }
 
 export default function AMCPage() {
+  const router = useRouter()
   const { hasPermission } = useAuth()
   const { amcs, pagination, loading, error, fetchAMCs } = useAMCContext()
   const [searchTerm, setSearchTerm] = useState("")
@@ -51,6 +54,10 @@ export default function AMCPage() {
     }
   }
 
+  const handleAddAMC = () => {
+    router.push("/amc/create")
+  }
+
   if (!hasPermission("amc:read")) {
     return (
       <AuthenticatedLayout breadcrumbs={[{ label: "AMC Management" }]}>
@@ -73,7 +80,7 @@ export default function AMCPage() {
             <p className="text-muted-foreground">Manage Asset Management Companies</p>
           </div>
           {hasPermission("amc:create") && (
-            <Button>
+            <Button onClick={handleAddAMC}>
               <Plus className="h-4 w-4 mr-2" />
               Add AMC
             </Button>
@@ -99,7 +106,7 @@ export default function AMCPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading ? "..." : `₹${amcs.reduce((sum: number, a: AMC) => sum + parseFloat(a.aum.replace("₹", "").replace(",", "")), 0).toLocaleString("en-IN")}`}
+                {loading ? "..." : `₹${amcs.reduce((sum: number, a: AMC) => sum + parseFloat(a.aum.replace("?", "").replace(",", "")), 0).toLocaleString("en-IN")}`}
               </div>
               <p className="text-xs text-muted-foreground">Across all AMCs</p>
             </CardContent>
