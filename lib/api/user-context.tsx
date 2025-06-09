@@ -3,7 +3,6 @@
 import type React from "react"
 import { createContext, useContext, useState, useCallback } from "react"
 
-// Define User interface to match users.tsx
 interface User {
   id: string
   name: string
@@ -15,20 +14,19 @@ interface User {
   joinDate: string
 }
 
-// Define pagination interface
 interface Pagination {
   limit: number
   page: number
   total: number
 }
 
-// Define context type
 interface UserContextType {
   users: User[]
   pagination: Pagination
   loading: boolean
   error: string | null
   fetchUsers: (page?: number, limit?: number, search?: string) => Promise<void>
+  createUser: (data: { name: string; email: string; mobile: string; password: string }) => Promise<void>
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
@@ -44,7 +42,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setError(null)
 
     try {
-      const token = localStorage.getItem("jockey-token")
+      const token = typeof window !== "undefined" ? localStorage.getItem("jockey-token") : null
       if (!token) {
         throw new Error("No authentication token found")
       }
@@ -75,17 +73,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const apiUsers = result.data.users
       const paginationData = result.data.pagination
 
-      // Map API users to User interface
       const mappedUsers: User[] = apiUsers.map((apiUser: any) => ({
         id: apiUser.ID.toString(),
         name: apiUser.Name,
-        email: apiUser.Email || "",
-        phone: apiUser.Mobile || "",
-        kycStatus:
-          apiUser.IsBlocked ? "rejected" : apiUser.UserKYC > 0 ? "verified" : "pending",
+        email: apiUser.Email,
+        phone: apiUser.Mobile,
+        kycStatus: apiUser.UserKYC > 0 ? "verified" : apiUser.UserKYC === 0 ? "pending" : "rejected",
         investmentValue: `₹${(apiUser.MainBalance || 0).toLocaleString("en-IN")}`,
-        distributor: "Unknown", // Placeholder: API doesn't provide distributor
-        joinDate: apiUser.CreatedAt.split("T")[0], // Extract date from CreatedAt
+        distributor: apiUser.Distributor || "N/A",
+        joinDate: apiUser.CreatedAt.split("T")[0],
       }))
 
       setUsers(mappedUsers)
@@ -103,8 +99,54 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  const createUser = useCallback(
+    async (data: { name: string; email: string; mobile: string; password: string }) => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        const token = typeof window !== "undefined" ? localStorage.getItem("jockey-token") : null
+        const formData = new URLSearchParams()
+        formData.append("name", data.name)
+        formData.append("email", data.email)
+        formData.append("mobile", data.mobile)
+        formData.append("password", data.password)
+
+        const headers: HeadersInit = {
+          "Content-Type": "application/x-www-form-urlencoded",
+        }
+        if (token) {
+          headers["Authorization"] = `Bearer ${token}`
+        }
+
+        const response = await fetch("https://api.classiacapital.com/auth/signup", {
+          method: "POST",
+          headers,
+          body: formData.toString(),
+        })
+
+        const result = await response.json()
+        console.log("User Create API Response:", result)
+
+        if (!response.ok || !result.status) {
+          throw new Error(result.message || "Failed to create user")
+        }
+
+        await fetchUsers(1, 10)
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "An error occurred while creating user"
+        setError(errorMessage)
+        console.error("User Create Error:", err)
+        throw err
+      } finally {
+        setLoading(false)
+      }
+    },
+    [fetchUsers]
+  )
+
   return (
-    <UserContext.Provider value={{ users, pagination, loading, error, fetchUsers }}>
+    <UserContext.Provider value={{ users, pagination, loading, error, fetchUsers, createUser }}>
       {children}
     </UserContext.Provider>
   )
@@ -112,7 +154,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
 export const useUserContext = () => {
   const context = useContext(UserContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useUserContext must be used within a UserProvider")
   }
   return context

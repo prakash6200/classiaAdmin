@@ -1,6 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/api/auth-context"
+import { useUserContext } from "@/lib/api/user-context"
 import { AuthenticatedLayout } from "@/components/authenticated-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,8 +13,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Search, Plus, MoreHorizontal, Users, CheckCircle, XCircle, Clock, ChevronLeft, ChevronRight } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useAuth } from "@/lib/api/auth-context"
-import { useUserContext } from "@/lib/api/user-context"
 
 interface User {
   id: string
@@ -25,19 +26,28 @@ interface User {
 }
 
 export default function UsersPage() {
-  const { hasPermission } = useAuth()
+  const router = useRouter()
+  const { hasPermission, user } = useAuth()
   const { users, pagination, loading, error, fetchUsers } = useUserContext()
   const [searchTerm, setSearchTerm] = useState("")
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    fetchUsers(1, 10, searchTerm)
-  }, [fetchUsers, searchTerm])
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      console.log("Fetching users with search term:", searchTerm)
+      fetchUsers(1, 10, searchTerm)
+    }
+  }, [fetchUsers, searchTerm, user])
 
   const getKYCStatusBadge = (status: User["kycStatus"]) => {
     switch (status) {
       case "verified":
         return (
-          <Badge variant="default" className="bg-green-500">
+          <Badge className="bg-green-500">
             <CheckCircle className="h-3 w-3 mr-1" />
             Verified
           </Badge>
@@ -59,6 +69,25 @@ export default function UsersPage() {
       default:
         return <Badge variant="secondary">{status}</Badge>
     }
+  }
+
+  const handleAddUser = () => {
+    if (isClient) {
+      router.push("/users/register")
+    }
+  }
+
+  if (!user) {
+    return (
+      <AuthenticatedLayout breadcrumbs={[{ label: "User Management" }]}>
+        <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Loading...</h2>
+            <p className="text-muted-foreground">Please wait while we authenticate your session.</p>
+          </div>
+        </div>
+      </AuthenticatedLayout>
+    )
   }
 
   if (!hasPermission("user:read")) {
@@ -83,7 +112,7 @@ export default function UsersPage() {
             <p className="text-muted-foreground">Manage investor accounts and KYC status</p>
           </div>
           {hasPermission("user:create") && (
-            <Button>
+            <Button onClick={handleAddUser} disabled={!isClient}>
               <Plus className="h-4 w-4 mr-2" />
               Add User
             </Button>
@@ -98,7 +127,7 @@ export default function UsersPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pagination.total}</div>
+              <div className="text-2xl font-bold">{loading ? "..." : pagination.total}</div>
               <p className="text-xs text-muted-foreground">Registered investors</p>
             </CardContent>
           </Card>
@@ -108,7 +137,7 @@ export default function UsersPage() {
               <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{users.filter((u) => u.kycStatus === "verified").length}</div>
+              <div className="text-2xl font-bold">{loading ? "..." : users.filter((u) => u.kycStatus === "verified").length}</div>
               <p className="text-xs text-muted-foreground">Verified accounts</p>
             </CardContent>
           </Card>
@@ -118,7 +147,7 @@ export default function UsersPage() {
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{users.filter((u) => u.kycStatus === "pending").length}</div>
+              <div className="text-2xl font-bold">{loading ? "..." : users.filter((u) => u.kycStatus === "pending").length}</div>
               <p className="text-xs text-muted-foreground">Awaiting verification</p>
             </CardContent>
           </Card>
@@ -129,7 +158,7 @@ export default function UsersPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ₹{users.reduce((sum: number, u: { investmentValue: string }) => sum + parseFloat(u.investmentValue.replace("₹", "").replace(",", "")), 0).toLocaleString("en-IN")}
+                {loading ? "..." : `₹${users.reduce((sum: number, u) => sum + parseFloat(u.investmentValue.replace("₹", "").replace(",", "")), 0).toLocaleString("en-IN")}`}
               </div>
               <p className="text-xs text-muted-foreground">Combined portfolio</p>
             </CardContent>
@@ -194,7 +223,7 @@ export default function UsersPage() {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
+                              <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
@@ -220,7 +249,7 @@ export default function UsersPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => fetchUsers(pagination.page - 1, pagination.limit, searchTerm)}
-                      disabled={pagination.page === 1}
+                      disabled={pagination.page === 1 || loading}
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" />
                       Previous
@@ -229,7 +258,7 @@ export default function UsersPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => fetchUsers(pagination.page + 1, pagination.limit, searchTerm)}
-                      disabled={pagination.page * pagination.limit >= pagination.total}
+                      disabled={pagination.page * pagination.limit >= pagination.total || loading}
                     >
                       Next
                       <ChevronRight className="h-4 w-4 ml-1" />
