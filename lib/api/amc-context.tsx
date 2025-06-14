@@ -1,17 +1,28 @@
 "use client"
 
-import type React from "react"
 import { createContext, useContext, useState, useCallback } from "react"
 
 interface AMC {
   id: string
   name: string
+  email: string
+  mobile: string
   logo?: string
   status: "active" | "inactive" | "pending"
-  aum: string
+  aum: number // Store as number for calculations
   distributors: number
   funds: number
   registrationDate: string
+  panNumber: string
+  address: string
+  city: string
+  state: string
+  pinCode: string
+  contactPersonName: string
+  contactPerDesignation: string
+  isMobileVerified: boolean
+  isEmailVerified: boolean
+  isBlocked: boolean
 }
 
 interface Pagination {
@@ -26,7 +37,19 @@ interface AMCContextType {
   loading: boolean
   error: string | null
   fetchAMCs: (page?: number, limit?: number, search?: string) => Promise<void>
-  createAMC: (data: { name: string; email: string; mobile: string; password: string }) => Promise<void>
+  createAMC: (data: {
+    name: string
+    email: string
+    mobile: string
+    password: string
+    address: string
+    city: string
+    contactPerDesignation: string
+    contactPersonName: string
+    panNumber: string
+    pinCode: string
+    state: string
+  }) => Promise<void>
 }
 
 const AMCContext = createContext<AMCContextType | undefined>(undefined)
@@ -51,9 +74,6 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
         page: page.toString(),
         limit: limit.toString(),
       })
-      if (search) {
-        queryParams.append("search", search)
-      }
 
       const response = await fetch(`https://api.classiacapital.com/amc/list?${queryParams}`, {
         method: "GET",
@@ -70,31 +90,51 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
         throw new Error(result.message || "Failed to fetch AMCs")
       }
 
-      const apiUsers = result.data.users
+      let apiUsers = result.data.users
       const paginationData = result.data.pagination
+
+      // Apply client-side search filtering
+      if (search) {
+        apiUsers = apiUsers.filter((user: any) =>
+          user.Name.toLowerCase().includes(search.toLowerCase()) ||
+          user.Email.toLowerCase().includes(search.toLowerCase())
+        )
+      }
 
       const mappedAMCs: AMC[] = apiUsers
         .filter((apiUser: any) => apiUser.Role === "AMC")
         .map((apiUser: any) => ({
           id: apiUser.ID.toString(),
           name: apiUser.Name,
+          email: apiUser.Email,
+          mobile: apiUser.Mobile,
           logo: apiUser.ProfileImage || "",
           status: apiUser.IsBlocked
             ? "inactive"
             : apiUser.UserKYC > 0
             ? "active"
             : "pending",
-          aum: `₹${(apiUser.MainBalance || 0).toLocaleString("en-IN")}`,
-          distributors: 0,
-          funds: 0,
+          aum: apiUser.MainBalance || 0,
+          distributors: 0, // Placeholder: Not in API
+          funds: 0, // Placeholder: Not in API
           registrationDate: apiUser.CreatedAt.split("T")[0],
+          panNumber: apiUser.PanNumber || "",
+          address: apiUser.Address || "",
+          city: apiUser.City || "",
+          state: apiUser.State || "",
+          pinCode: apiUser.PinCode || "",
+          contactPersonName: apiUser.ContactPersonName || "",
+          contactPerDesignation: apiUser.ContactPerDesignation || "",
+          isMobileVerified: apiUser.IsMobileVerified || false,
+          isEmailVerified: apiUser.IsEmailVerified || false,
+          isBlocked: apiUser.IsBlocked || false,
         }))
 
       setAMCs(mappedAMCs)
       setPagination({
         limit: paginationData.limit,
         page: paginationData.page,
-        total: paginationData.total,
+        total: search ? mappedAMCs.length : paginationData.total,
       })
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An error occurred while fetching AMCs"
@@ -106,7 +146,19 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const createAMC = useCallback(
-    async (data: { name: string; email: string; mobile: string; password: string }) => {
+    async (data: {
+      name: string
+      email: string
+      mobile: string
+      password: string
+      address: string
+      city: string
+      contactPerDesignation: string
+      contactPersonName: string
+      panNumber: string
+      pinCode: string
+      state: string
+    }) => {
       setLoading(true)
       setError(null)
 
@@ -121,6 +173,13 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
         formData.append("email", data.email)
         formData.append("mobile", data.mobile)
         formData.append("password", data.password)
+        formData.append("address", data.address)
+        formData.append("city", data.city)
+        formData.append("contactPerDesignation", data.contactPerDesignation)
+        formData.append("contactPersonName", data.contactPersonName)
+        formData.append("panNumber", data.panNumber)
+        formData.append("pinCode", data.pinCode)
+        formData.append("state", data.state)
 
         const response = await fetch("https://api.classiacapital.com/admin/register-amc", {
           method: "POST",
@@ -144,7 +203,7 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
         const errorMessage = err instanceof Error ? err.message : "An error occurred while creating AMC"
         setError(errorMessage)
         console.error("AMC Create Error:", err)
-        throw err // Re-throw to handle in UI
+        throw err
       } finally {
         setLoading(false)
       }

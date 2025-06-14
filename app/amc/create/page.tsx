@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/api/auth-context"
 import { useAMCContext } from "@/lib/api/amc-context"
@@ -12,26 +11,24 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Upload, FileText, CheckCircle, AlertCircle } from "lucide-react"
+import { Upload, FileText } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-
 
 export default function CreateAMCPage() {
   const router = useRouter()
-  const { hasPermission } = useAuth()
+  const { hasPermission, user } = useAuth()
   const { createAMC } = useAMCContext()
   const [formData, setFormData] = useState({
     name: "",
-    pan: "",
-    gstin: "",
+    panNumber: "",
     email: "",
-    phone: "",
+    mobile: "",
     address: "",
     city: "",
     state: "",
-    pincode: "",
-    contactPerson: "",
-    designation: "",
+    pinCode: "",
+    contactPersonName: "",
+    contactPerDesignation: "",
     password: "",
   })
   const [documents, setDocuments] = useState({
@@ -42,11 +39,11 @@ export default function CreateAMCPage() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [verificationStatus, setVerificationStatus] = useState({
-    pan: "pending",
-    email: "pending",
-    gstin: "pending",
-  })
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -54,17 +51,24 @@ export default function CreateAMCPage() {
 
   const handleFileUpload = (field: string, file: File) => {
     setDocuments((prev) => ({ ...prev, [field]: file }))
-    console.log(`Uploaded ${field}:`, file.name) // Log for debugging
+    console.log(`Uploaded ${field}:`, file.name)
   }
 
-  const verifyPAN = async () => {
-    // Mock PAN verification
-    setVerificationStatus((prev) => ({ ...prev, pan: "verified" }))
-  }
-
-  const verifyEmail = async () => {
-    // Mock email verification
-    setVerificationStatus((prev) => ({ ...prev, email: "verified" }))
+  const validateForm = () => {
+    if (!formData.name) return "AMC Name is required"
+    if (!/^[A-Z]{5}\d{4}[A-Z]$/.test(formData.panNumber)) return "Invalid PAN format (e.g., ABCDE1234F)"
+    if (!formData.email.includes("@")) return "Invalid email format"
+    if (!/^\d{10}$/.test(formData.mobile)) return "Mobile must be 10 digits"
+    if (!formData.address) return "Address is required"
+    if (!formData.city) return "City is required"
+    if (!formData.state) return "State is required"
+    if (!/^\d{6}$/.test(formData.pinCode)) return "Pincode must be 6 digits"
+    if (!formData.contactPersonName) return "Contact Person Name is required"
+    if (!formData.contactPerDesignation) return "Contact Person Designation is required"
+    if (formData.password.length < 8) return "Password must be at least 8 characters"
+    if (!documents.sebiLicense) return "SEBI License is required"
+    if (!documents.amlCertificate) return "AML Certificate is required"
+    return null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,41 +76,63 @@ export default function CreateAMCPage() {
     setIsSubmitting(true)
     setError(null)
 
+    const validationError = validateForm()
+    if (validationError) {
+      setError(validationError)
+      setIsSubmitting(false)
+      return
+    }
+
     try {
-      // Call createAMC with required fields
+      // Call createAMC with all fields
       await createAMC({
         name: formData.name,
         email: formData.email,
-        mobile: formData.phone,
+        mobile: formData.mobile,
         password: formData.password,
-      })
-
-      // Log additional fields and documents (for future API integration)
-      console.log("Additional fields not sent to API:", {
-        pan: formData.pan,
-        gstin: formData.gstin,
         address: formData.address,
         city: formData.city,
+        contactPerDesignation: formData.contactPerDesignation,
+        contactPersonName: formData.contactPersonName,
+        panNumber: formData.panNumber,
+        pinCode: formData.pinCode,
         state: formData.state,
-        pincode: formData.pincode,
-        contactPerson: formData.contactPerson,
-        designation: formData.designation,
       })
-      console.log("Documents not sent to API:", documents)
 
-      // Mock file upload (await real API)
+      // Mock document upload
       if (documents.logo || documents.sebiLicense || documents.amlCertificate || documents.incorporationCert) {
-        console.log("Pending file upload to https://api.classiacapital.com/admin/upload-document")
+        const token = localStorage.getItem("jockey-token")
+        console.log("Simulating document upload to https://api.classiacapital.com/admin/upload-document", {
+          token,
+          files: Object.entries(documents)
+            .filter(([_, file]) => file)
+            .map(([field, file]) => ({ field, name: file!.name })),
+        })
+        // TODO: Implement actual file upload API call
       }
 
-      // Redirect to /amc
-      router.push("/amc")
+      if (isClient) {
+        router.push("/amc")
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An error occurred while creating AMC"
       setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (!user) {
+    return (
+      <AuthenticatedLayout breadcrumbs={[{ label: "AMC Management", href: "/amc" }, { label: "Create AMC" }]}>
+        <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Loading...</h2>
+            <p className="text-muted-foreground">Please wait while we authenticate your session.</p>
+          </div>
+        </div>
+      </AuthenticatedLayout>
+    )
   }
 
   if (!hasPermission("amc:create")) {
@@ -158,67 +184,37 @@ export default function CreateAMCPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="pan">PAN Number *</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="pan"
-                        value={formData.pan}
-                        onChange={(e) => handleInputChange("pan", e.target.value)}
-                        placeholder="ABCDE1234F"
-                        required
-                      />
-                      <Button type="button" variant="outline" onClick={verifyPAN}>
-                        {verificationStatus.pan === "verified" ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          "Verify"
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="gstin">GSTIN</Label>
-                    <Input
-                      id="gstin"
-                      value={formData.gstin}
-                      onChange={(e) => handleInputChange("gstin", e.target.value)}
-                      placeholder="22ABCDE1234F1Z5"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="panNumber">PAN Number *</Label>
+                  <Input
+                    id="panNumber"
+                    value={formData.panNumber}
+                    onChange={(e) => handleInputChange("panNumber", e.target.value)}
+                    placeholder="ABCDE1234F"
+                    required
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email *</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => handleInputChange("email", e.target.value)}
-                        placeholder="contact@amc.com"
-                        required
-                      />
-                      <Button type="button" variant="outline" onClick={verifyEmail}>
-                        {verificationStatus.email === "verified" ? (
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                        ) : (
-                          "Verify"
-                        )}
-                      </Button>
-                    </div>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      placeholder="contact@amc.com"
+                      required
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Label htmlFor="mobile">Phone Number *</Label>
                     <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange("phone", e.target.value)}
-                      placeholder="+91 98765 43210"
+                      id="mobile"
+                      value={formData.mobile}
+                      onChange={(e) => handleInputChange("mobile", e.target.value)}
+                      placeholder="9876543210"
                       required
                     />
                   </div>
@@ -231,7 +227,7 @@ export default function CreateAMCPage() {
                     type="password"
                     value={formData.password}
                     onChange={(e) => handleInputChange("password", e.target.value)}
-                    placeholder="Enter password"
+                    placeholder="Enter password (min 8 characters)"
                     required
                   />
                 </div>
@@ -270,26 +266,26 @@ export default function CreateAMCPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="state">State *</Label>
-                    <Select onValueChange={(value) => handleInputChange("state", value)}>
+                    <Select onValueChange={(value) => handleInputChange("state", value)} required>
                       <SelectTrigger>
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="maharashtra">Maharashtra</SelectItem>
-                        <SelectItem value="delhi">Delhi</SelectItem>
-                        <SelectItem value="karnataka">Karnataka</SelectItem>
-                        <SelectItem value="gujarat">Gujarat</SelectItem>
+                        <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                        <SelectItem value="Delhi">Delhi</SelectItem>
+                        <SelectItem value="Karnataka">Karnataka</SelectItem>
+                        <SelectItem value="Gujarat">Gujarat</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="pincode">Pincode *</Label>
+                  <Label htmlFor="pinCode">Pincode *</Label>
                   <Input
-                    id="pincode"
-                    value={formData.pincode}
-                    onChange={(e) => handleInputChange("pincode", e.target.value)}
+                    id="pinCode"
+                    value={formData.pinCode}
+                    onChange={(e) => handleInputChange("pinCode", e.target.value)}
                     placeholder="400001"
                     required
                   />
@@ -305,23 +301,23 @@ export default function CreateAMCPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="contactPerson">Contact Person Name *</Label>
+                  <Label htmlFor="contactPersonName">Contact Person Name *</Label>
                   <Input
-                    id="contactPerson"
-                    value={formData.contactPerson}
-                    onChange={(e) => handleInputChange("contactPerson", e.target.value)}
+                    id="contactPersonName"
+                    value={formData.contactPersonName}
+                    onChange={(e) => handleInputChange("contactPersonName", e.target.value)}
                     placeholder="John Doe"
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="designation">Designation *</Label>
+                  <Label htmlFor="contactPerDesignation">Designation *</Label>
                   <Input
-                    id="designation"
-                    value={formData.designation}
-                    onChange={(e) => handleInputChange("designation", e.target.value)}
-                    placeholder="Chief Executive Officer"
+                    id="contactPerDesignation"
+                    value={formData.contactPerDesignation}
+                    onChange={(e) => handleInputChange("contactPerDesignation", e.target.value)}
+                    placeholder="Manager"
                     required
                   />
                 </div>
@@ -363,6 +359,7 @@ export default function CreateAMCPage() {
                       accept=".pdf,.jpg,.png"
                       onChange={(e) => e.target.files?.[0] && handleFileUpload("sebiLicense", e.target.files[0])}
                       className="absolute inset-0 opacity-0 cursor-pointer"
+                      required
                     />
                   </div>
                 </div>
@@ -379,6 +376,7 @@ export default function CreateAMCPage() {
                       accept=".pdf,.jpg,.png"
                       onChange={(e) => e.target.files?.[0] && handleFileUpload("amlCertificate", e.target.files[0])}
                       className="absolute inset-0 opacity-0 cursor-pointer"
+                      required
                     />
                   </div>
                 </div>
@@ -402,44 +400,9 @@ export default function CreateAMCPage() {
             </Card>
           </div>
 
-          {/* Verification Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Verification Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="flex items-center space-x-2">
-                  {verificationStatus.pan === "verified" ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-5 w-5 text-yellow-500" />
-                  )}
-                  <span className="text-sm">PAN Verification</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {verificationStatus.email === "verified" ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-5 w-5 text-yellow-500" />
-                  )}
-                  <span className="text-sm">Email Verification</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {verificationStatus.gstin === "verified" ? (
-                    <CheckCircle className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <AlertCircle className="h-5 w-5 text-yellow-500" />
-                  )}
-                  <span className="text-sm">GSTIN Verification</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Submit */}
           <div className="flex justify-end space-x-4">
-            <Button type="button" variant="outline" onClick={() => router.push("/amc")}>
+            <Button type="button" variant="outline" onClick={() => isClient && router.push("/amc")}>
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>

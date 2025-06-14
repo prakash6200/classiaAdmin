@@ -14,37 +14,38 @@ import { Search, Plus, MoreHorizontal, Building2, Users, TrendingUp, ChevronLeft
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useRouter } from "next/navigation"
 
-
 interface AMC {
   id: string
   name: string
+  email: string
+  mobile: string
   logo?: string
   status: "active" | "inactive" | "pending"
-  aum: string
+  aum: number
   distributors: number
   funds: number
   registrationDate: string
+  panNumber: string
+  contactPersonName: string
 }
 
 export default function AMCPage() {
   const router = useRouter()
-  const { hasPermission } = useAuth()
+  const { hasPermission, user } = useAuth()
   const { amcs, pagination, loading, error, fetchAMCs } = useAMCContext()
   const [searchTerm, setSearchTerm] = useState("")
 
   useEffect(() => {
-    console.log("Fetching AMCs with search term:", searchTerm)
-    fetchAMCs(1, 10, searchTerm)
-  }, [fetchAMCs, searchTerm])
+    if (user) {
+      console.log("Fetching AMCs with search term:", searchTerm)
+      fetchAMCs(1, 10, searchTerm)
+    }
+  }, [fetchAMCs, searchTerm, user])
 
   const getStatusBadge = (status: AMC["status"]) => {
     switch (status) {
       case "active":
-        return (
-          <Badge variant="default" className="bg-green-500">
-            Active
-          </Badge>
-        )
+        return <Badge className="bg-green-500">Active</Badge>
       case "inactive":
         return <Badge variant="secondary">Inactive</Badge>
       case "pending":
@@ -55,7 +56,20 @@ export default function AMCPage() {
   }
 
   const handleAddAMC = () => {
-    router.push("/amc/create")
+    router.push("/amc/register") // Updated to match create page path
+  }
+
+  if (!user) {
+    return (
+      <AuthenticatedLayout breadcrumbs={[{ label: "AMC Management" }]}>
+        <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Loading...</h2>
+            <p className="text-muted-foreground">Please wait while we authenticate your session.</p>
+          </div>
+        </div>
+      </AuthenticatedLayout>
+    )
   }
 
   if (!hasPermission("amc:read")) {
@@ -96,7 +110,9 @@ export default function AMCPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{loading ? "..." : pagination.total}</div>
-              <p className="text-xs text-muted-foreground">{loading ? "..." : amcs.filter((a) => a.status === "active").length} active</p>
+              <p className="text-xs text-muted-foreground">
+                {loading ? "..." : amcs.filter((a) => a.status === "active").length} active
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -106,7 +122,7 @@ export default function AMCPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading ? "..." : `₹${amcs.reduce((sum: number, a: AMC) => sum + parseFloat(a.aum.replace("?", "").replace(",", "")), 0).toLocaleString("en-IN")}`}
+                {loading ? "..." : `₹${amcs.reduce((sum: number, a: AMC) => sum + a.aum, 0).toLocaleString("en-IN")}`}
               </div>
               <p className="text-xs text-muted-foreground">Across all AMCs</p>
             </CardContent>
@@ -139,7 +155,7 @@ export default function AMCPage() {
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search AMCs..."
+                  placeholder="Search by name or email..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
@@ -158,10 +174,12 @@ export default function AMCPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>AMC Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Mobile</TableHead>
+                      <TableHead>PAN</TableHead>
+                      <TableHead>Contact Person</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>AUM</TableHead>
-                      <TableHead>Distributors</TableHead>
-                      <TableHead>Funds</TableHead>
                       <TableHead>Registered</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -170,10 +188,12 @@ export default function AMCPage() {
                     {amcs.map((amc) => (
                       <TableRow key={amc.id}>
                         <TableCell className="font-medium">{amc.name}</TableCell>
+                        <TableCell>{amc.email}</TableCell>
+                        <TableCell>{amc.mobile}</TableCell>
+                        <TableCell>{amc.panNumber || "N/A"}</TableCell>
+                        <TableCell>{amc.contactPersonName || "N/A"}</TableCell>
                         <TableCell>{getStatusBadge(amc.status)}</TableCell>
-                        <TableCell>{amc.aum}</TableCell>
-                        <TableCell>{amc.distributors}</TableCell>
-                        <TableCell>{amc.funds}</TableCell>
+                        <TableCell>₹{amc.aum.toLocaleString("en-IN")}</TableCell>
                         <TableCell>{new Date(amc.registrationDate).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
