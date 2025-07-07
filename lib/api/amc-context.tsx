@@ -9,7 +9,7 @@ interface AMC {
   mobile: string
   logo?: string
   status: "active" | "inactive" | "pending"
-  aum: number // Store as number for calculations
+  aum: number
   distributors: number
   funds: number
   registrationDate: string
@@ -23,6 +23,10 @@ interface AMC {
   isMobileVerified: boolean
   isEmailVerified: boolean
   isBlocked: boolean
+  equityPer: number
+  debtPer: number
+  cashSplit: number
+  fundName: string
 }
 
 interface Pagination {
@@ -49,6 +53,10 @@ interface AMCContextType {
     panNumber: string
     pinCode: string
     state: string
+    equityPer: number
+    debtPer: number
+    cashSplit: number
+    fundName: string
   }) => Promise<void>
 }
 
@@ -93,7 +101,6 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
       let apiUsers = result.data.users
       const paginationData = result.data.pagination
 
-      // Apply client-side search filtering
       if (search) {
         apiUsers = apiUsers.filter((user: any) =>
           user.Name.toLowerCase().includes(search.toLowerCase()) ||
@@ -115,8 +122,8 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
             ? "active"
             : "pending",
           aum: apiUser.MainBalance || 0,
-          distributors: 0, // Placeholder: Not in API
-          funds: 0, // Placeholder: Not in API
+          distributors: 0,
+          funds: 0,
           registrationDate: apiUser.CreatedAt.split("T")[0],
           panNumber: apiUser.PanNumber || "",
           address: apiUser.Address || "",
@@ -128,6 +135,10 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
           isMobileVerified: apiUser.IsMobileVerified || false,
           isEmailVerified: apiUser.IsEmailVerified || false,
           isBlocked: apiUser.IsBlocked || false,
+          equityPer: apiUser.EquityPer || 0,
+          debtPer: apiUser.DebtPer || 0,
+          cashSplit: apiUser.CashSplit || 0,
+          fundName: apiUser.FundName || "",
         }))
 
       setAMCs(mappedAMCs)
@@ -158,6 +169,10 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
       panNumber: string
       pinCode: string
       state: string
+      equityPer: number
+      debtPer: number
+      cashSplit: number
+      fundName: string
     }) => {
       setLoading(true)
       setError(null)
@@ -180,6 +195,10 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
         formData.append("panNumber", data.panNumber)
         formData.append("pinCode", data.pinCode)
         formData.append("state", data.state)
+        formData.append("equityPer", data.equityPer.toString())
+        formData.append("debtPer", data.debtPer.toString())
+        formData.append("cashSplit", data.cashSplit.toString())
+        formData.append("fundName", data.fundName)
 
         const response = await fetch("https://api.classiacapital.com/admin/register-amc", {
           method: "POST",
@@ -197,7 +216,6 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
           throw new Error(result.message || "Failed to create AMC")
         }
 
-        // Refresh AMC list after creation
         await fetchAMCs(1, 10)
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "An error occurred while creating AMC"

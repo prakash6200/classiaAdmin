@@ -30,6 +30,10 @@ export default function CreateAMCPage() {
     contactPersonName: "",
     contactPerDesignation: "",
     password: "",
+    equityPer: "",
+    debtPer: "",
+    cashSplit: "",
+    fundName: "",
   })
   const [documents, setDocuments] = useState({
     logo: null as File | null,
@@ -66,6 +70,13 @@ export default function CreateAMCPage() {
     if (!formData.contactPersonName) return "Contact Person Name is required"
     if (!formData.contactPerDesignation) return "Contact Person Designation is required"
     if (formData.password.length < 8) return "Password must be at least 8 characters"
+    if (!/^\d+$/.test(formData.equityPer) || Number(formData.equityPer) < 0 || Number(formData.equityPer) > 100)
+      return "Equity Percentage must be a number between 0 and 100"
+    if (!/^\d+$/.test(formData.debtPer) || Number(formData.debtPer) < 0 || Number(formData.debtPer) > 100)
+      return "Debt Percentage must be a number between 0 and 100"
+    if (!/^\d+$/.test(formData.cashSplit) || Number(formData.cashSplit) < 0 || Number(formData.cashSplit) > 100)
+      return "Cash Split must be a number between 0 and 100"
+    if (!formData.fundName) return "Fund Name is required"
     if (!documents.sebiLicense) return "SEBI License is required"
     if (!documents.amlCertificate) return "AML Certificate is required"
     return null
@@ -84,7 +95,6 @@ export default function CreateAMCPage() {
     }
 
     try {
-      // Call createAMC with all fields
       await createAMC({
         name: formData.name,
         email: formData.email,
@@ -97,9 +107,12 @@ export default function CreateAMCPage() {
         panNumber: formData.panNumber,
         pinCode: formData.pinCode,
         state: formData.state,
+        equityPer: Number(formData.equityPer),
+        debtPer: Number(formData.debtPer),
+        cashSplit: Number(formData.cashSplit),
+        fundName: formData.fundName,
       })
 
-      // Mock document upload
       if (documents.logo || documents.sebiLicense || documents.amlCertificate || documents.incorporationCert) {
         const token = localStorage.getItem("jockey-token")
         console.log("Simulating document upload to https://api.classiacapital.com/admin/upload-document", {
@@ -108,7 +121,6 @@ export default function CreateAMCPage() {
             .filter(([_, file]) => file)
             .map(([field, file]) => ({ field, name: file!.name })),
         })
-        // TODO: Implement actual file upload API call
       }
 
       if (isClient) {
@@ -166,7 +178,6 @@ export default function CreateAMCPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            {/* Basic Information */}
             <Card>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
@@ -234,7 +245,6 @@ export default function CreateAMCPage() {
               </CardContent>
             </Card>
 
-            {/* Address Information */}
             <Card>
               <CardHeader>
                 <CardTitle>Address Information</CardTitle>
@@ -293,7 +303,6 @@ export default function CreateAMCPage() {
               </CardContent>
             </Card>
 
-            {/* Contact Person */}
             <Card>
               <CardHeader>
                 <CardTitle>Contact Person</CardTitle>
@@ -324,7 +333,63 @@ export default function CreateAMCPage() {
               </CardContent>
             </Card>
 
-            {/* Document Upload */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Fund Information</CardTitle>
+                <CardDescription>Details about the fund</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fundName">Fund Name *</Label>
+                  <Input
+                    id="fundName"
+                    value={formData.fundName}
+                    onChange={(e) => handleInputChange("fundName", e.target.value)}
+                    placeholder="e.g., HDFC Capital Fund"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="equityPer">Equity Percentage *</Label>
+                    <Input
+                      id="equityPer"
+                      type="number"
+                      value={formData.equityPer}
+                      onChange={(e) => handleInputChange("equityPer", e.target.value)}
+                      placeholder="20"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="debtPer">Debt Percentage *</Label>
+                    <Input
+                      id="debtPer"
+                      type="number"
+                      value={formData.debtPer}
+                      onChange={(e) => handleInputChange("debtPer", e.target.value)}
+                      placeholder="30"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="cashSplit">Cash Split *</Label>
+                    <Input
+                      id="cashSplit"
+                      type="number"
+                      value={formData.cashSplit}
+                      onChange={(e) => handleInputChange("cashSplit", e.target.value)}
+                      placeholder="50"
+                      required
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Document Upload</CardTitle>
@@ -400,7 +465,6 @@ export default function CreateAMCPage() {
             </Card>
           </div>
 
-          {/* Submit */}
           <div className="flex justify-end space-x-4">
             <Button type="button" variant="outline" onClick={() => isClient && router.push("/amc")}>
               Cancel

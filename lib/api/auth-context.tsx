@@ -4,13 +4,12 @@ import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import type { User, AuthContextType } from "@/types/auth"
 
-// Define permission mapping for roles, matching DashboardPage's expected roles
 const rolePermissions: Record<string, string[]> = {
   super_admin: ["*"],
   admin: ["amc:*", "distributor:*", "user:*", "transaction:*", "course:*"],
   amc: ["amc:read", "amc:update", "distributor:read", "transaction:read"],
   distributor: ["course:read", "transaction:read", "user:read"],
-  user: ["user:read", "transaction:read"], // Default permissions for USER role
+  user: ["user:read", "transaction:read"],
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -19,7 +18,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
-    // Check for stored auth token and user
     const storedUser = localStorage.getItem("jockey-user")
     const storedToken = localStorage.getItem("jockey-token")
     if (storedUser && storedToken) {
@@ -66,7 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("API User Data:", apiUser)
       console.log("API Token:", token)
 
-      // Map API roles to internal roles
       const roleMap: Record<string, string> = {
         "SUPER-ADMIN": "super_admin",
         DISTRIBUTOR: "distributor",
@@ -75,9 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         AMC: "amc",
       }
 
-      const mappedRole = roleMap[apiUser.Role] || "user" // Fallback to user
+      const mappedRole = roleMap[apiUser.Role] || "user"
 
-      // Map API user to internal User type
       const user: User = {
         id: apiUser.ID.toString(),
         name: apiUser.Name,
