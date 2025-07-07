@@ -1,3 +1,5 @@
+
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -27,6 +29,19 @@ interface AMC {
   registrationDate: string
   panNumber: string
   contactPersonName: string
+  address: string
+  city: string
+  state: string
+  pinCode: string
+  contactPerDesignation: string
+  isMobileVerified: boolean
+  isEmailVerified: boolean
+  isBlocked: boolean
+  isDeleted: boolean
+  fundName: string
+  equityPer: number
+  debtPer: number
+  cashSplit: number
 }
 
 export default function AMCPage() {
@@ -56,7 +71,36 @@ export default function AMCPage() {
   }
 
   const handleAddAMC = () => {
-    router.push("/amc/register") // Updated to match create page path
+    router.push("/amc/register")
+  }
+
+  const handleBlockUnblock = async (amcId: string, isDeleted: boolean) => {
+    try {
+      const token = localStorage.getItem("jockey-token")
+      if (!token) {
+        throw new Error("No authentication token found")
+      }
+
+      const response = await fetch(`https://api.classiacapital.com/admin/update-amc?id=${amcId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ isDeleted: (!isDeleted).toString() }).toString(),
+      })
+
+      const result = await response.json()
+      console.log("Block/Unblock API Response:", result)
+
+      if (!response.ok || !result.status) {
+        throw new Error(result.message || "Failed to update AMC status")
+      }
+
+      await fetchAMCs(1, 10, searchTerm)
+    } catch (err) {
+      console.error("Block/Unblock Error:", err)
+    }
   }
 
   if (!user) {
@@ -101,7 +145,6 @@ export default function AMCPage() {
           )}
         </div>
 
-        {/* Overview Cards */}
         <div className="grid gap-4 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -139,14 +182,12 @@ export default function AMCPage() {
           </Card>
         </div>
 
-        {/* Error Display */}
         {error && (
           <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        {/* AMC Table */}
         <Card>
           <CardHeader>
             <CardTitle>All AMCs</CardTitle>
@@ -194,7 +235,7 @@ export default function AMCPage() {
                         <TableCell>{amc.contactPersonName || "N/A"}</TableCell>
                         <TableCell>{getStatusBadge(amc.status)}</TableCell>
                         <TableCell>₹{amc.aum.toLocaleString("en-IN")}</TableCell>
-                        <TableCell>{new Date(amc.registrationDate).toLocaleDateString()}</TableCell>
+                       <TableCell>{new Date(amc.registrationDate).toLocaleDateString("en-IN")}</TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -203,10 +244,21 @@ export default function AMCPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>View Details</DropdownMenuItem>
-                              {hasPermission("amc:update") && <DropdownMenuItem>Edit AMC</DropdownMenuItem>}
-                              {hasPermission("amc:commission") && <DropdownMenuItem>Commission Setup</DropdownMenuItem>}
+                              <DropdownMenuItem onClick={() => router.push(`/amc/${amc.id}`)}>
+                                View Details
+                              </DropdownMenuItem>
+                              {hasPermission("amc:update") && (
+                                <DropdownMenuItem>Edit AMC</DropdownMenuItem>
+                              )}
+                              {hasPermission("amc:commission") && (
+                                <DropdownMenuItem>Commission Setup</DropdownMenuItem>
+                              )}
                               <DropdownMenuItem>View Reports</DropdownMenuItem>
+                              {hasPermission("amc:update") && (
+                                <DropdownMenuItem onClick={() => handleBlockUnblock(amc.id, amc.isDeleted)}>
+                                  {amc.isDeleted ? "Unblock" : "Block"}
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -214,7 +266,6 @@ export default function AMCPage() {
                     ))}
                   </TableBody>
                 </Table>
-                {/* Pagination Controls */}
                 <div className="flex items-center justify-between mt-4">
                   <div className="text-sm text-muted-foreground">
                     Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}

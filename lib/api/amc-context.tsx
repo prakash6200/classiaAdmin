@@ -1,3 +1,4 @@
+
 "use client"
 
 import { createContext, useContext, useState, useCallback } from "react"
@@ -23,10 +24,11 @@ interface AMC {
   isMobileVerified: boolean
   isEmailVerified: boolean
   isBlocked: boolean
+  isDeleted: boolean
+  fundName: string
   equityPer: number
   debtPer: number
   cashSplit: number
-  fundName: string
 }
 
 interface Pagination {
@@ -134,11 +136,12 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
           contactPerDesignation: apiUser.ContactPerDesignation || "",
           isMobileVerified: apiUser.IsMobileVerified || false,
           isEmailVerified: apiUser.IsEmailVerified || false,
-          isBlocked: apiUser.IsBlocked || false,
+          isBlocked: apiUser.IsDeleted || false,
+          isDeleted: apiUser.IsDeleted || false,
+          fundName: apiUser.FundName || "",
           equityPer: apiUser.EquityPer || 0,
           debtPer: apiUser.DebtPer || 0,
           cashSplit: apiUser.CashSplit || 0,
-          fundName: apiUser.FundName || "",
         }))
 
       setAMCs(mappedAMCs)
