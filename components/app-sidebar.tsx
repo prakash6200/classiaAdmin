@@ -211,17 +211,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
                             className={`
-                              w-full justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium
+                              w-full justify-between rounded-xl px-3 py-4 h-[40px] text-left text-sm font-medium
                               transition-all duration-200 group
                               hover:bg-[#1a1a2e] hover:text-[#d7b56d]
                               data-[state=open]:bg-[#1a1a2e] data-[state=open]:text-[#d7b56d]
                               ${hasActiveChild ? "bg-[#1a1a2e] text-[#d7b56d]" : "text-gray-300"}
                             `}
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 py-4">
                               <div className="relative">
                                 <item.icon className="h-5 w-5 transition-colors" />
-                                <div className="absolute inset-0 blur-xl bg-[#d7b56d] opacity-0 group-hover:opacity-30 transition-opacity" />
+                                <div className=" inset-0 blur-xl bg-[#d7b56d] opacity-0 group-hover:opacity-30 transition-opacity" />
                               </div>
                               <span>{item.title}</span>
                             </div>
@@ -241,7 +241,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         href={subItem.url}
                                         className={`
                                           block rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
-                                          hover:bg-[#1a1a2e]/70 hover:text-[#d7b56d]
+                                          hover:bg-[#1a1a2e]/70 hover:text-[#d7b56d] 
                                           ${isSubActive ? "bg-[#1a1a2e] text-[#d7b56d]" : "text-gray-400"}
                                         `}
                                       >
@@ -315,7 +315,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 align="end"
                 sideOffset={8}
               >
-                <DropdownMenuItem className="rounded-lg text-gray-300 hover:bg-[#1a1a2e] hover:text-[#d7b56d] transition-all">
+                <DropdownMenuItem className="rounded-lg  text-white hover:bg-[#1a1a2e] hover:text-[#d7b56d] transition-all">
                   <Settings className="mr-2 h-4 w-4" />
                   Account Settings
                 </DropdownMenuItem>
