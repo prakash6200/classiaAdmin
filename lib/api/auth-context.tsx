@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log("Sending login request with:", formData.toString())
 
-      const response = await fetch("https://api.classiacapital.com/auth/login", {
+      const response = await fetch("https://goapi.classiacapital.com/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",

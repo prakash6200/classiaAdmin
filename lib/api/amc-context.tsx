@@ -85,7 +85,7 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
         limit: limit.toString(),
       })
 
-      const response = await fetch(`https://api.classiacapital.com/amc/list?${queryParams}`, {
+      const response = await fetch(`https://goapi.classiacapital.com/amc/list?${queryParams}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -203,7 +203,7 @@ export function AMCProvider({ children }: { children: React.ReactNode }) {
         formData.append("cashSplit", data.cashSplit.toString())
         formData.append("fundName", data.fundName)
 
-        const response = await fetch("https://api.classiacapital.com/admin/register-amc", {
+        const response = await fetch("https://goapi.classiacapital.com/admin/register-amc", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,

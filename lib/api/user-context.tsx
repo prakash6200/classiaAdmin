@@ -55,7 +55,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         queryParams.append("search", search)
       }
 
-      const response = await fetch(`https://api.classiacapital.com/admin/user/list?${queryParams}`, {
+      const response = await fetch(`https://goapi.classiacapital.com/admin/user/list?${queryParams}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -119,7 +119,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           headers["Authorization"] = `Bearer ${token}`
         }
 
-        const response = await fetch("https://api.classiacapital.com/auth/signup", {
+        const response = await fetch("https://goapi.classiacapital.com/auth/signup", {
           method: "POST",
           headers,
           body: formData.toString(),

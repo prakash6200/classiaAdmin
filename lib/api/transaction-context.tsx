@@ -69,7 +69,7 @@ export function TransactionProvider({ children }: { children: React.ReactNode })
         queryParams.append("search", search)
       }
 
-      const response = await fetch(`https://api.classiacapital.com/admin/transaction/list?${queryParams}`, {
+      const response = await fetch(`https://goapi.classiacapital.com/admin/transaction/list?${queryParams}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,

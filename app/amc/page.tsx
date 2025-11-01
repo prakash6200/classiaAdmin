@@ -81,7 +81,7 @@ export default function AMCPage() {
         throw new Error("No authentication token found")
       }
 
-      const response = await fetch(`https://api.classiacapital.com/admin/update-amc?id=${amcId}`, {
+      const response = await fetch(`https://goapi.classiacapital.com/admin/update-amc?id=${amcId}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,

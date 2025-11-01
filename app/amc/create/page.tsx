@@ -115,7 +115,7 @@ export default function CreateAMCPage() {
 
       if (documents.logo || documents.sebiLicense || documents.amlCertificate || documents.incorporationCert) {
         const token = localStorage.getItem("jockey-token")
-        console.log("Simulating document upload to https://api.classiacapital.com/admin/upload-document", {
+        console.log("Simulating document upload to https://goapi.classiacapital.com/admin/upload-document", {
           token,
           files: Object.entries(documents)
             .filter(([_, file]) => file)
