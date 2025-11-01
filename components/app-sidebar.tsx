@@ -40,23 +40,11 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Badge } from "@/components/ui/badge"
-
-// Mock user
-const mockUser = {
-  name: "Admin User",
-  email: "admin@classiacapital.com",
-  role: "super_admin",
-  avatar: "",
-}
+import { useAuth } from "@/lib/api/auth-context"
 
 const navigationItems = [
-  // === EXISTING NAVIGATION ===
-  {
-    title: "Dashboard",
-    icon: Home,
-    url: "/dashboard",
-    permission: "dashboard:read",
-  },
+  // ── ALL NAVIGATION ITEMS IN ONE LIST ───────────────────────────────────
+  { title: "Dashboard", icon: Home, url: "/dashboard", permission: "dashboard:read" },
   {
     title: "AMC Management",
     icon: Building2,
@@ -100,88 +88,82 @@ const navigationItems = [
     ],
   },
   {
-    title: "Courses & Certification",
+    title: "Courses",
     icon: BookOpen,
     permission: "course:read",
     items: [
       { title: "All Courses", url: "/courses", permission: "course:read" },
-      { title: "Create Course", url: "/courses/create", permission: "course:create" },
-      { title: "Certificates", url: "/courses/certificates", permission: "course:certificates" },
-      { title: "Progress Tracking", url: "/courses/progress", permission: "course:progress" },
+      // { title: "Create Course", url: "/courses/create", permission: "course:create" },
+      // { title: "Certificates", url: "/courses/certificates", permission: "course:certificates" },
+      // { title: "Progress Tracking", url: "/courses/progress", permission: "course:progress" },
     ],
   },
-  {
-    title: "Co-User Access",
-    icon: Shield,
-    permission: "couser:read",
-    items: [
-      { title: "All Co-Users", url: "/co-users", permission: "couser:read" },
-      { title: "Create Co-User", url: "/co-users/create", permission: "couser:create" },
-      { title: "Access Logs", url: "/co-users/logs", permission: "couser:logs" },
-    ],
-  },
-
-  // === NEW SECTIONS (BELOW) ===
-  {
-    title: "Basket",
-    icon: ShoppingBasket,
-    permission: "basket:read",
-    items: [
-      { title: "My Basket", url: "/basket", permission: "basket:read" },
-      { title: "Saved Baskets", url: "/basket/saved", permission: "basket:saved" },
-      { title: "Basket History", url: "/basket/history", permission: "basket:history" },
-    ],
-  },
+  // {
+  //   title: "Co-User Access",
+  //   icon: Shield,
+  //   permission: "couser:read",
+  //   items: [
+  //     { title: "All Co-Users", url: "/co-users", permission: "couser:read" },
+  //     { title: "Create Co-User", url: "/co-users/create", permission: "couser:create" },
+  //     { title: "Access Logs", url: "/co-users/logs", permission: "couser:logs" },
+  //   ],
+  // },
+ {
+  title: "Basket Management",
+  icon: ShoppingBasket,
+  permission: "basket:read",
+  items: [
+    { title: "All Baskets", url: "/baskets", permission: "basket:read" },
+    { title: "Stock Management", url: "/baskets/stocks", permission: "basket:stocks" },
+  ],
+},
   {
     title: "Support",
     icon: Headphones,
     permission: "support:read",
     items: [
-      { title: "Help Center", url: "/support", permission: "support:read" },
-      { title: "FAQs", url: "/support/faqs", permission: "support:faqs" },
-      { title: "Submit Ticket", url: "/support/ticket", permission: "support:ticket" },
-      { title: "Live Chat", url: "/support/chat", permission: "support:chat" },
+      { title: "Ticket", url: "/support", permission: "support:read" },
+    
     ],
   },
-  {
-    title: "Contact",
-    icon: Phone,
-    permission: "contact:read",
-    items: [
-      { title: "Contact Us", url: "/contact", permission: "contact:read" },
-      { title: "Branch Locator", url: "/contact/branches", permission: "contact:branches" },
-      { title: "Emergency", url: "/contact/emergency", permission: "contact:emergency" },
-    ],
-  },
-  {
-    title: "App Settings",
-    icon: Cog,
-    permission: "settings:read",
-    items: [
-      { title: "General Settings", url: "/settings", permission: "settings:read" },
-      { title: "Notifications", url: "/settings/notifications", permission: "settings:notifications" },
-      { title: "Security", url: "/settings/security", permission: "settings:security" },
-      { title: "Privacy Policy", url: "/settings/privacy", permission: "settings:privacy" },
-    ],
-  },
-  {
-    title: "Mutual Fund",
-    icon: TrendingUp,
-    permission: "mf:read",
-    items: [
-      { title: "All Funds", url: "/mutual-funds", permission: "mf:read" },
-      { title: "Top Performers", url: "/mutual-funds/top", permission: "mf:top" },
-      { title: "SIP Calculator", url: "/mutual-funds/sip", permission: "mf:sip" },
-      { title: "Compare Funds", url: "/mutual-funds/compare", permission: "mf:compare" },
-      { title: "Invest Now", url: "/mutual-funds/invest", permission: "mf:invest" },
-    ],
-  },
+  // {
+  //   title: "Contact",
+  //   icon: Phone,
+  //   permission: "contact:read",
+  //   items: [
+  //     { title: "Contact Us", url: "/contact", permission: "contact:read" },
+  //     { title: "Branch Locator", url: "/contact/branches", permission: "contact:branches" },
+  //     { title: "Emergency", url: "/contact/emergency", permission: "contact:emergency" },
+  //   ],
+  // },
+  // {
+  //   title: "App Settings",
+  //   icon: Cog,
+  //   permission: "settings:read",
+  //   items: [
+  //     { title: "General Settings", url: "/settings", permission: "settings:read" },
+  //     { title: "Notifications", url: "/settings/notifications", permission: "settings:notifications" },
+  //     { title: "Security", url: "/settings/security", permission: "settings:security" },
+  //     { title: "Privacy Policy", url: "/settings/privacy", permission: "settings:privacy" },
+  //   ],
+  // },
+  // {
+  //   title: "Mutual Fund",
+  //   icon: TrendingUp,
+  //   permission: "mf:read",
+  //   items: [
+  //     { title: "All Funds", url: "/mutual-funds", permission: "mf:read" },
+  //     { title: "Top Performers", url: "/mutual-funds/top", permission: "mf:top" },
+  //     { title: "SIP Calculator", url: "/mutual-funds/sip", permission: "mf:sip" },
+  //     { title: "Compare Funds", url: "/mutual-funds/compare", permission: "mf:compare" },
+  //     { title: "Invest Now", url: "/mutual-funds/invest", permission: "mf:invest" },
+  //   ],
+  // },
 ]
 
-export function AppSidebar({ ...props }) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
-  const user = mockUser
-  const hasPermission = (permission: string) => true // Replace with real auth
+  const { user, logout, hasPermission } = useAuth()
 
   const filteredNavigation = navigationItems.filter((item) => hasPermission(item.permission))
 
@@ -191,7 +173,7 @@ export function AppSidebar({ ...props }) {
       className="border-r border-[#d7b56d]/10 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] backdrop-blur-2xl"
       {...props}
     >
-      {/* HEADER */}
+      {/* ── HEADER ── */}
       <SidebarHeader className="border-b border-[#d7b56d]/10">
         <div className="flex items-center gap-3 px-4 py-5">
           <div className="relative group">
@@ -209,9 +191,8 @@ export function AppSidebar({ ...props }) {
         </div>
       </SidebarHeader>
 
-      {/* CONTENT */}
+      {/* ── SINGLE SECTION: ALL NAVIGATION ── */}
       <SidebarContent className="px-3 py-4">
-        {/* === MAIN NAVIGATION === */}
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center gap-2 px-2 text-xs font-bold text-[#d7b56d] uppercase tracking-wider">
             <Sparkles className="h-3.5 w-3.5" />
@@ -264,7 +245,7 @@ export function AppSidebar({ ...props }) {
                                           ${isSubActive ? "bg-[#1a1a2e] text-[#d7b56d]" : "text-gray-400"}
                                         `}
                                       >
-                                        <span>{subItem.title}</span>
+                                        {subItem.title}
                                       </a>
                                     </SidebarMenuSubButton>
                                   </SidebarMenuSubItem>
@@ -278,7 +259,7 @@ export function AppSidebar({ ...props }) {
                         <a
                           href={item.url}
                           className={`
-                            flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 group
+                            flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all group
                             hover:bg-[#1a1a2e] hover:text-[#d7b56d]
                             ${isActive ? "bg-gradient-to-r from-[#d7b56d]/20 to-[#c9a860]/10 text-[#d7b56d] border-l-4 border-[#d7b56d]" : "text-gray-300"}
                           `}
@@ -297,11 +278,9 @@ export function AppSidebar({ ...props }) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-      
       </SidebarContent>
 
-      {/* FOOTER */}
+      {/* ── FOOTER (Logout Works!) ── */}
       <SidebarFooter className="border-t border-[#d7b56d]/10 bg-gradient-to-t from-[#0a0a0f] to-[#0f0f1a]/50 backdrop-blur-md p-3">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -314,21 +293,22 @@ export function AppSidebar({ ...props }) {
                   <Avatar className="h-11 w-11 rounded-full ring-2 ring-[#d7b56d]/40 ring-offset-2 ring-offset-[#0a0a0f] transition-all hover:ring-[#d7b56d]">
                     <AvatarImage src={user?.avatar} />
                     <AvatarFallback className="bg-gradient-to-br from-[#d7b56d] to-[#b8955d] text-[#00004D] font-bold text-lg">
-                      {user?.name?.[0]}
+                      {user?.name?.[0] ?? "A"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="ml-3 flex-1 text-left">
-                    <p className="truncate text-sm font-semibold text-white">{user?.name}</p>
+                    <p className="truncate text-sm font-semibold text-white">{user?.name ?? "Guest"}</p>
                     <Badge
                       variant="secondary"
                       className="h-5 px-2 text-xs font-medium bg-[#d7b56d]/20 text-[#d7b56d] border border-[#d7b56d]/40"
                     >
-                      {user?.role.replace("_", " ")}
+                      {user?.role?.replace("_", " ") ?? "User"}
                     </Badge>
                   </div>
                   <ChevronDown className="ml-auto h-4 w-4 text-gray-400" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
+
               <DropdownMenuContent
                 className="w-64 rounded-xl bg-[#0f0f1a]/95 backdrop-blur-xl border border-[#d7b56d]/20 shadow-2xl"
                 side="top"
@@ -339,7 +319,11 @@ export function AppSidebar({ ...props }) {
                   <Settings className="mr-2 h-4 w-4" />
                   Account Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem className="rounded-lg text-red-400 hover:bg-red-950/50 hover:text-red-300 transition-all">
+
+                <DropdownMenuItem
+                  onClick={logout}
+                  className="rounded-lg text-red-400 hover:bg-red-950/50 hover:text-red-300 transition-all cursor-pointer"
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   Log Out
                 </DropdownMenuItem>

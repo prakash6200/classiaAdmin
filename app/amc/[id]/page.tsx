@@ -57,7 +57,7 @@ export default function AMCDetailsPage() {
             throw new Error("No authentication token found")
           }
 
-          const response = await fetch(`https://goapi.classiacapital.com/amc/list?page=1&limit=1&id=${id}`, {
+          const response = await fetch(`https://.classiacapital.com/amc/list?page=1&limit=1&id=${id}`, {
             method: "GET",
             headers: {
               Authorization: `Bearer ${token}`,

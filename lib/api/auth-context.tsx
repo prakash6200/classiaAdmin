@@ -7,7 +7,7 @@ import type { User, AuthContextType } from "@/types/auth"
 
 const rolePermissions: Record<string, string[]> = {
   super_admin: ["*"],
-  admin: ["amc:*", "distributor:*", "user:*", "transaction:*", "course:*"],
+  admin: ["*"],
   amc: ["amc:read", "amc:update", "distributor:read", "transaction:read"],
   distributor: ["course:read", "transaction:read", "user:read"],
   user: ["user:read", "transaction:read"],
