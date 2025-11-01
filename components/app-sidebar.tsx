@@ -1,7 +1,7 @@
 "use client"
 
-import type * as React from "react"
-import { useAuth } from "@/lib/api/auth-context"
+import React from "react"
+import { usePathname } from "next/navigation"
 import {
   Building2,
   Users,
@@ -13,6 +13,12 @@ import {
   ChevronDown,
   Home,
   Shield,
+  Sparkles,
+  ShoppingBasket,
+  Headphones,
+  Phone,
+  Cog,
+  TrendingUp,
 } from "lucide-react"
 
 import {
@@ -29,13 +35,22 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarRail,
 } from "@/components/ui/sidebar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Badge } from "@/components/ui/badge"
+
+// Mock user
+const mockUser = {
+  name: "Admin User",
+  email: "admin@classiacapital.com",
+  role: "super_admin",
+  avatar: "",
+}
 
 const navigationItems = [
+  // === EXISTING NAVIGATION ===
   {
     title: "Dashboard",
     icon: Home,
@@ -105,119 +120,236 @@ const navigationItems = [
       { title: "Access Logs", url: "/co-users/logs", permission: "couser:logs" },
     ],
   },
+
+  // === NEW SECTIONS (BELOW) ===
+  {
+    title: "Basket",
+    icon: ShoppingBasket,
+    permission: "basket:read",
+    items: [
+      { title: "My Basket", url: "/basket", permission: "basket:read" },
+      { title: "Saved Baskets", url: "/basket/saved", permission: "basket:saved" },
+      { title: "Basket History", url: "/basket/history", permission: "basket:history" },
+    ],
+  },
+  {
+    title: "Support",
+    icon: Headphones,
+    permission: "support:read",
+    items: [
+      { title: "Help Center", url: "/support", permission: "support:read" },
+      { title: "FAQs", url: "/support/faqs", permission: "support:faqs" },
+      { title: "Submit Ticket", url: "/support/ticket", permission: "support:ticket" },
+      { title: "Live Chat", url: "/support/chat", permission: "support:chat" },
+    ],
+  },
+  {
+    title: "Contact",
+    icon: Phone,
+    permission: "contact:read",
+    items: [
+      { title: "Contact Us", url: "/contact", permission: "contact:read" },
+      { title: "Branch Locator", url: "/contact/branches", permission: "contact:branches" },
+      { title: "Emergency", url: "/contact/emergency", permission: "contact:emergency" },
+    ],
+  },
+  {
+    title: "App Settings",
+    icon: Cog,
+    permission: "settings:read",
+    items: [
+      { title: "General Settings", url: "/settings", permission: "settings:read" },
+      { title: "Notifications", url: "/settings/notifications", permission: "settings:notifications" },
+      { title: "Security", url: "/settings/security", permission: "settings:security" },
+      { title: "Privacy Policy", url: "/settings/privacy", permission: "settings:privacy" },
+    ],
+  },
+  {
+    title: "Mutual Fund",
+    icon: TrendingUp,
+    permission: "mf:read",
+    items: [
+      { title: "All Funds", url: "/mutual-funds", permission: "mf:read" },
+      { title: "Top Performers", url: "/mutual-funds/top", permission: "mf:top" },
+      { title: "SIP Calculator", url: "/mutual-funds/sip", permission: "mf:sip" },
+      { title: "Compare Funds", url: "/mutual-funds/compare", permission: "mf:compare" },
+      { title: "Invest Now", url: "/mutual-funds/invest", permission: "mf:invest" },
+    ],
+  },
 ]
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user, logout, hasPermission } = useAuth()
+export function AppSidebar({ ...props }) {
+  const pathname = usePathname()
+  const user = mockUser
+  const hasPermission = (permission: string) => true // Replace with real auth
 
   const filteredNavigation = navigationItems.filter((item) => hasPermission(item.permission))
 
   return (
-    <Sidebar variant="inset" {...props}>
-      <SidebarHeader>
-        <div className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg overflow-hidden bg-gradient-to-br from-yellow-400 to-yellow-600">
-            <img src="/images/app-logo.jpeg" alt="Jockey Trading Logo" className="h-8 w-8 object-contain" />
+    <Sidebar
+      variant="inset"
+      className="border-r border-[#d7b56d]/10 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] backdrop-blur-2xl"
+      {...props}
+    >
+      {/* HEADER */}
+      <SidebarHeader className="border-b border-[#d7b56d]/10">
+        <div className="flex items-center gap-3 px-4 py-5">
+          <div className="relative group">
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#d7b56d] to-[#b8955d] blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300" />
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-[#0f0f1a] border border-[#d7b56d]/30 overflow-hidden">
+              <div className="text-xl font-bold text-[#d7b56d] drop-shadow-lg">CC</div>
+            </div>
           </div>
-          <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-bold text-lg">Jockey Trading</span>
-            <span className="truncate text-xs text-muted-foreground">Admin Panel</span>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-[#d7b56d] via-[#c9a860] to-[#d7b56d] bg-clip-text text-transparent">
+              Classia Capital
+            </h1>
+            <p className="text-xs text-gray-500">Admin Portal</p>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      {/* CONTENT */}
+      <SidebarContent className="px-3 py-4">
+        {/* === MAIN NAVIGATION === */}
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
+          <SidebarGroupLabel className="flex items-center gap-2 px-2 text-xs font-bold text-[#d7b56d] uppercase tracking-wider">
+            <Sparkles className="h-3.5 w-3.5" />
+            Navigation
+          </SidebarGroupLabel>
+          <SidebarGroupContent className="mt-3 space-y-1">
             <SidebarMenu>
-              {filteredNavigation.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  {item.items ? (
-                    <Collapsible className="group/collapsible">
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton>
-                          <item.icon className="h-4 w-4" />
+              {filteredNavigation.map((item) => {
+                const isActive = pathname === item.url
+                const hasActiveChild = item.items?.some((sub) => pathname === sub.url)
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    {item.items ? (
+                      <Collapsible defaultOpen={hasActiveChild} className="group/collapsible">
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            className={`
+                              w-full justify-between rounded-xl px-3 py-2.5 text-left text-sm font-medium
+                              transition-all duration-200 group
+                              hover:bg-[#1a1a2e] hover:text-[#d7b56d]
+                              data-[state=open]:bg-[#1a1a2e] data-[state=open]:text-[#d7b56d]
+                              ${hasActiveChild ? "bg-[#1a1a2e] text-[#d7b56d]" : "text-gray-300"}
+                            `}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="relative">
+                                <item.icon className="h-5 w-5 transition-colors" />
+                                <div className="absolute inset-0 blur-xl bg-[#d7b56d] opacity-0 group-hover:opacity-30 transition-opacity" />
+                              </div>
+                              <span>{item.title}</span>
+                            </div>
+                            <ChevronDown className="h-4 w-4 text-gray-500 transition-transform group-data-[state=open]/collapsible:rotate-180" />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenuSub className="ml-9 mt-1 space-y-1 border-l-2 border-[#d7b56d]/20 pl-3">
+                            {item.items
+                              .filter((sub) => hasPermission(sub.permission))
+                              .map((subItem) => {
+                                const isSubActive = pathname === subItem.url
+                                return (
+                                  <SidebarMenuSubItem key={subItem.title}>
+                                    <SidebarMenuSubButton asChild>
+                                      <a
+                                        href={subItem.url}
+                                        className={`
+                                          block rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+                                          hover:bg-[#1a1a2e]/70 hover:text-[#d7b56d]
+                                          ${isSubActive ? "bg-[#1a1a2e] text-[#d7b56d]" : "text-gray-400"}
+                                        `}
+                                      >
+                                        <span>{subItem.title}</span>
+                                      </a>
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                )
+                              })}
+                          </SidebarMenuSub>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    ) : (
+                      <SidebarMenuButton asChild>
+                        <a
+                          href={item.url}
+                          className={`
+                            flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 group
+                            hover:bg-[#1a1a2e] hover:text-[#d7b56d]
+                            ${isActive ? "bg-gradient-to-r from-[#d7b56d]/20 to-[#c9a860]/10 text-[#d7b56d] border-l-4 border-[#d7b56d]" : "text-gray-300"}
+                          `}
+                        >
+                          <div className="relative">
+                            <item.icon className="h-5 w-5 transition-colors" />
+                            <div className="absolute inset-0 blur-xl bg-[#d7b56d] opacity-0 group-hover:opacity-40 transition-opacity" />
+                          </div>
                           <span>{item.title}</span>
-                          <ChevronDown className="ml-auto h-4 w-4 transition-transform group-data-[state=open]/collapsible:rotate-180" />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.items
-                            .filter((subItem) => hasPermission(subItem.permission))
-                            .map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.title}>
-                                <SidebarMenuSubButton asChild>
-                                  <a href={subItem.url}>
-                                    <span>{subItem.title}</span>
-                                  </a>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  ) : (
-                    <SidebarMenuButton asChild>
-                      <a href={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  )}
-                </SidebarMenuItem>
-              ))}
+                        </a>
+                      </SidebarMenuButton>
+                    )}
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+      
       </SidebarContent>
 
-      <SidebarFooter>
+      {/* FOOTER */}
+      <SidebarFooter className="border-t border-[#d7b56d]/10 bg-gradient-to-t from-[#0a0a0f] to-[#0f0f1a]/50 backdrop-blur-md p-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  className="w-full justify-start rounded-xl px-3 py-3 hover:bg-[#1a1a2e] data-[state=open]:bg-[#1a1a2e] transition-all duration-200"
                 >
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name} />
-                    <AvatarFallback className="rounded-lg">
-                      {user?.name
-                        ?.split(" ")
-                        .map((n) => n[0])
-                        .join("")}
+                  <Avatar className="h-11 w-11 rounded-full ring-2 ring-[#d7b56d]/40 ring-offset-2 ring-offset-[#0a0a0f] transition-all hover:ring-[#d7b56d]">
+                    <AvatarImage src={user?.avatar} />
+                    <AvatarFallback className="bg-gradient-to-br from-[#d7b56d] to-[#b8955d] text-[#00004D] font-bold text-lg">
+                      {user?.name?.[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{user?.name}</span>
-                    <span className="truncate text-xs capitalize">{user?.role?.replace("_", " ")}</span>
+                  <div className="ml-3 flex-1 text-left">
+                    <p className="truncate text-sm font-semibold text-white">{user?.name}</p>
+                    <Badge
+                      variant="secondary"
+                      className="h-5 px-2 text-xs font-medium bg-[#d7b56d]/20 text-[#d7b56d] border border-[#d7b56d]/40"
+                    >
+                      {user?.role.replace("_", " ")}
+                    </Badge>
                   </div>
-                  <ChevronDown className="ml-auto size-4" />
+                  <ChevronDown className="ml-auto h-4 w-4 text-gray-400" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                side="bottom"
+                className="w-64 rounded-xl bg-[#0f0f1a]/95 backdrop-blur-xl border border-[#d7b56d]/20 shadow-2xl"
+                side="top"
                 align="end"
-                sideOffset={4}
+                sideOffset={8}
               >
-                <DropdownMenuItem>
-                  <Settings className="h-4 w-4" />
+                <DropdownMenuItem className="rounded-lg text-gray-300 hover:bg-[#1a1a2e] hover:text-[#d7b56d] transition-all">
+                  <Settings className="mr-2 h-4 w-4" />
                   Account Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={logout}>
-                  <LogOut className="h-4 w-4" />
-                  Log out
+                <DropdownMenuItem className="rounded-lg text-red-400 hover:bg-red-950/50 hover:text-red-300 transition-all">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   )
 }
+
+export default AppSidebar
