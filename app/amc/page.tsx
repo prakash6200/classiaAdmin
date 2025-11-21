@@ -56,7 +56,7 @@ export default function AMCPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-foreground">AMC Management</h2>
+            <h2 className="text-3xl font-bold  ">AMC Management</h2>
             <p className="text-muted-foreground">Manage Asset Management Companies</p>
           </div>
           {hasPermission("amc:create") && (
