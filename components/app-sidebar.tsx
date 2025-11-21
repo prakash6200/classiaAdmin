@@ -174,7 +174,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {...props}
     >
       {/* ── HEADER ── */}
-      <SidebarHeader className="border-b border-[#d7b56d]/10">
+      <SidebarHeader className="border-b border-[#d7b56d]/10 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] backdrop-blur-2xl">
         <div className="flex items-center gap-3 px-4 py-5">
           <div className="relative group">
             <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#d7b56d] to-[#b8955d] blur-xl opacity-0 group-hover:opacity-50 transition-opacity duration-300" />
@@ -192,7 +192,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       {/* ── SINGLE SECTION: ALL NAVIGATION ── */}
-      <SidebarContent className="px-3 py-4">
+      <SidebarContent className=" py-3 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] backdrop-blur-2xl">
         <SidebarGroup>
           <SidebarGroupLabel className="flex items-center gap-2 px-2 text-xs font-bold text-[#d7b56d] uppercase tracking-wider">
             <Sparkles className="h-3.5 w-3.5" />
@@ -211,7 +211,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
                             className={`
-                              w-full justify-between rounded-xl px-3 py-4 h-[40px] text-left text-sm font-medium
+                              w-full justify-between rounded-xl  py-3 h-[50px] text-left text-sm font-medium
                               transition-all duration-200 group
                               hover:bg-[#1a1a2e] hover:text-[#d7b56d]
                               data-[state=open]:bg-[#1a1a2e] data-[state=open]:text-[#d7b56d]
@@ -229,7 +229,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                          <SidebarMenuSub className="ml-9 mt-1 space-y-1 border-l-2 border-[#d7b56d]/20 pl-3">
+                          <SidebarMenuSub className="ml-4 mt-1 space-y-1 border-l-2 border-[#d7b56d]/20 ">
                             {item.items
                               .filter((sub) => hasPermission(sub.permission))
                               .map((subItem) => {
@@ -240,9 +240,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                       <a
                                         href={subItem.url}
                                         className={`
-                                          block rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200
+                                          block rounded-lg  h-[40px] text-sm font-medium transition-all duration-200
                                           hover:bg-[#1a1a2e]/70 hover:text-[#d7b56d] 
-                                          ${isSubActive ? "bg-[#1a1a2e] text-[#d7b56d]" : "text-gray-400"}
+                                          ${isSubActive ? "bg-[#1a1a2e] text-white" : "text-gray-100"}
                                         `}
                                       >
                                         {subItem.title}
@@ -259,7 +259,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <a
                           href={item.url}
                           className={`
-                            flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all group
+                            flex items-center rounded-xl  py-1 text-sm font-medium transition-all group
                             hover:bg-[#1a1a2e] hover:text-[#d7b56d]
                             ${isActive ? "bg-gradient-to-r from-[#d7b56d]/20 to-[#c9a860]/10 text-[#d7b56d] border-l-4 border-[#d7b56d]" : "text-gray-300"}
                           `}
@@ -281,16 +281,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       {/* ── FOOTER (Logout Works!) ── */}
-      <SidebarFooter className="border-t border-[#d7b56d]/10 bg-gradient-to-t from-[#0a0a0f] to-[#0f0f1a]/50 backdrop-blur-md p-3">
+      <SidebarFooter className="border-t border-[#d7b56d]/10 bg-gradient-to-t from-[#0a0a0f] to-[#0f0f1a]/50 backdrop-blur-md">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="w-full justify-start rounded-xl px-3 py-3 hover:bg-[#1a1a2e] data-[state=open]:bg-[#1a1a2e] transition-all duration-200"
+                  className="w-full justify-start rounded-xl h-full hover:bg-[#1a1a2e] data-[state=open]:bg-[#1a1a2e] transition-all duration-200"
                 >
-                  <Avatar className="h-11 w-11 rounded-full ring-2 ring-[#d7b56d]/40 ring-offset-2 ring-offset-[#0a0a0f] transition-all hover:ring-[#d7b56d]">
+                  <Avatar className="h-8 w-8 rounded-full transition-all">
                     <AvatarImage src={user?.avatar} />
                     <AvatarFallback className="bg-gradient-to-br from-[#d7b56d] to-[#b8955d] text-[#00004D] font-bold text-lg">
                       {user?.name?.[0] ?? "A"}
@@ -310,12 +310,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </DropdownMenuTrigger>
 
               <DropdownMenuContent
-                className="w-64 rounded-xl bg-[#0f0f1a]/95 backdrop-blur-xl border border-[#d7b56d]/20 shadow-2xl"
+                className="w-64 h-22 rounded-xl justify-between bg-[#0f0f1a]/95 backdrop-blur-xl border border-[#d7b56d]/20 shadow-2xl flex flex-col"
                 side="top"
                 align="end"
                 sideOffset={8}
               >
-                <DropdownMenuItem className="rounded-lg  text-white hover:bg-[#1a1a2e] hover:text-[#d7b56d] transition-all">
+                <DropdownMenuItem className="rounded-lg py-2 text-white hover:bg-[#1a1a2e] hover:text-[#d7b56d] transition-all">
                   <Settings className="mr-2 h-4 w-4" />
                   Account Settings
                 </DropdownMenuItem>
