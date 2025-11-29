@@ -27,12 +27,27 @@ export interface Basket {
 
 export interface Stock {
   id: number
-  name: string
+  exchId: string
+  token: number
   symbol: string
   series: string
-  isinNumber: string
-  faceValue: number
-  dateOfListing: string
+  fullName: string
+  expiry: string
+  strikePrice: number
+  marketLot: number
+  instrumentType: string
+  isin: string
+  faceValue: number | null
+  tickSize: number | null
+  sector: string
+  industry: string
+  marketCap: number
+  marketCapType: string
+  indexSymbol: string
+  isDeleted: boolean
+  createdAt: string
+  updatedAt: string
+  deletedAt: string | null
 }
 
 interface Pagination {
@@ -79,8 +94,11 @@ interface BasketContextType {
 
   // Stocks
   stocks: Stock[]
+  stocksPagination: Pagination
   stocksLoading: boolean
-  fetchStocks: (page?: number, limit?: number) => Promise<void>
+  stocksError: string | null
+  fetchStocks: (page?: number, sizePerPage?: number) => Promise<void>
+  updateStockStatus: (stockId: number, status: boolean) => Promise<void>
 }
 
 const BasketContext = createContext<BasketContextType | undefined>(undefined)
@@ -92,7 +110,9 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
   const [basketError, setBasketError] = useState<string | null>(null)
 
   const [stocks, setStocks] = useState<Stock[]>([])
+  const [stocksPagination, setStocksPagination] = useState<Pagination>({ limit: 20, page: 1, total: 0 })
   const [stocksLoading, setStocksLoading] = useState(false)
+  const [stocksError, setStocksError] = useState<string | null>(null)
 
   const token = typeof window !== "undefined" ? localStorage.getItem("jockey-token") : null
 
@@ -106,7 +126,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
       try {
         const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() })
         const res = await fetch(`https://nodeapi.classiacapital.com/basket/list`, {
-          headers: { Authorization: `${token}` },
+          headers: { Authorization: token },
         })
 
         const data = await res.json()
@@ -165,7 +185,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            Authorization: `${token}`,
+            Authorization: token,
           },
           body: form,
         })
@@ -212,7 +232,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           method: "PUT",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            Authorization: `${token}`,
+            Authorization: token,
           },
           body: form,
         })
@@ -256,7 +276,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            Authorization: `${token}`,
+            Authorization: token,
           },
           body: form,
         })
@@ -289,7 +309,7 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            Authorization: `${token}`,
+            Authorization: token,
           },
           body: form,
         })
@@ -310,43 +330,70 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
 
   // ── STOCKS ─────────────────────────────────────
   const fetchStocks = useCallback(
-  async (page = 1, limit = 50) => {
-    if (!token) return
+    async (page = 1, sizePerPage = 20) => {
+      if (!token) return
+      setStocksLoading(true)
+      setStocksError(null)
 
-    setStocksLoading(true)
+      try {
+        const params = new URLSearchParams({ 
+          page: page.toString(), 
+          sizePerPage: sizePerPage.toString() 
+        })
+        const res = await fetch(`https://nodeapi.classiacapital.com/basket/stocks-list?${params}`, {
+          headers: { Authorization: token },
+        })
 
-    const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() })
-    const url = `https://nodeapi.classiacapital.com/basket/stocks-list`
+        const data = await res.json()
+        if (!data.status) throw new Error(data.message || "Failed to load stocks")
 
-    try {
-      const res = await fetch(url, {
-        headers: { Authorization: `${token}` },
-      })
+        setStocks(data.data.stocksList)
+        setStocksPagination({
+          limit: sizePerPage,
+          page: parseInt(data.data.currentPage),
+          total: data.data.totalRecords,
+        })
+      } catch (e) {
+        setStocksError(e instanceof Error ? e.message : "Failed to load stocks")
+      } finally {
+        setStocksLoading(false)
+      }
+    },
+    [token]
+  )
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const updateStockStatus = useCallback(
+    async (stockId: number, status: boolean) => {
+      if (!token) throw new Error("Missing token")
+      setStocksLoading(true)
 
-      const data = await res.json()
-      if (!data.status) throw new Error(data.message)
+      try {
+        const form = new URLSearchParams()
+        form.append("stockId", stockId.toString())
+        form.append("status", status.toString())
 
-      const mapped = data.data.stocksList.map((s: any) => ({
-        id: s.id,
-        name: s.name,
-        symbol: s.symbol,
-        series: s.series,
-        isinNumber: s.isinNumber,
-        faceValue: s.faceValue,
-        dateOfListing: s.dateOfListing,
-      }))
+        const res = await fetch("https://nodeapi.classiacapital.com/basket/stock-update", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            Authorization: token,
+          },
+          body: form,
+        })
 
-      setStocks(prev => (page === 1 ? mapped : [...prev, ...mapped]))
-    } catch (e: any) {
-      console.error("Stocks fetch failed:", e.message)
-    } finally {
-      setStocksLoading(false)
-    }
-  },
-  [token]
-)
+        const result = await res.json()
+        if (!result.status) throw new Error(result.message || "Failed to update stock")
+
+        await fetchStocks(stocksPagination.page, stocksPagination.limit)
+      } catch (e) {
+        setStocksError(e instanceof Error ? e.message : "Update failed")
+        throw e
+      } finally {
+        setStocksLoading(false)
+      }
+    },
+    [token, fetchStocks, stocksPagination]
+  )
 
   return (
     <BasketContext.Provider
@@ -361,8 +408,11 @@ export function BasketProvider({ children }: { children: React.ReactNode }) {
         addStockToBasket,
         removeStockFromBasket,
         stocks,
+        stocksPagination,
         stocksLoading,
+        stocksError,
         fetchStocks,
+        updateStockStatus,
       }}
     >
       {children}
