@@ -114,6 +114,16 @@ const navigationItems = [
       { title: "Stock Management", url: "/baskets/stocks", permission: "basket:stocks" },
     ],
   },
+
+  
+    {
+    title: "Mutual Funds",
+    icon: TrendingUp,
+    permission: "mf:read",
+    items: [
+      { title: "All Funds", url: "/mutual-funds", permission: "mf:read" },
+    ],
+  },
   
   {
     title: "Support",

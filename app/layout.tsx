@@ -11,6 +11,7 @@ import { BasketProvider } from "@/lib/api/basket-context"
 import { ContactProvider } from "@/lib/api/contact-context"
 import { ExploreProvider } from "@/lib/api/explore-context"
 import { SettingsProvider } from "@/lib/api/settings-context"
+import { MutualFundProvider } from "@/lib/api/mf-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,13 +26,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <SupportProvider>
                   <CourseProvider>
                     <BasketProvider>
-                      <ContactProvider>
-                        <ExploreProvider>
-                          <SettingsProvider>
-                            {children}
-                          </SettingsProvider>
-                        </ExploreProvider>
-                      </ContactProvider>
+                      <MutualFundProvider>
+                        <ContactProvider>
+                          <ExploreProvider>
+                            <SettingsProvider>
+                              {children}
+                            </SettingsProvider>
+                          </ExploreProvider>
+                        </ContactProvider>
+                      </MutualFundProvider>
                     </BasketProvider>
                   </CourseProvider>
                 </SupportProvider>
