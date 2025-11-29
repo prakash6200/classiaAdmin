@@ -44,6 +44,15 @@ import { useAuth } from "@/lib/api/auth-context"
 
 const navigationItems = [
   // ── ALL NAVIGATION ITEMS IN ONE LIST ───────────────────────────────────
+
+
+  {
+  title: "Explore",
+  icon: Sparkles,
+  url: "/explore",
+  permission: "explore:read"
+},
+
   { title: "Dashboard", icon: Home, url: "/dashboard", permission: "dashboard:read" },
   {
     title: "Partner Management",
@@ -119,6 +128,10 @@ const navigationItems = [
     { title: "Contact List", url: "/contact", permission: "contact:read" },
   ],
 },
+
+
+
+
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -161,10 +174,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* ── SINGLE SECTION: ALL NAVIGATION ── */}
       <SidebarContent className=" py-3 bg-gradient-to-b from-[#0a0a0f] via-[#0f0f1a] to-[#0a0a0f] backdrop-blur-2xl">
         <SidebarGroup>
-          <SidebarGroupLabel className="flex items-center gap-2 px-2 text-xs font-bold text-[#d7b56d] uppercase tracking-wider">
-            <Sparkles className="h-3.5 w-3.5" />
-            Navigation
-          </SidebarGroupLabel>
+         
           <SidebarGroupContent className="mt-3 space-y-1">
             <SidebarMenu>
               {filteredNavigation.map((item) => {
