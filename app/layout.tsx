@@ -7,6 +7,7 @@ import { TransactionProvider } from "@/lib/api/transaction-context"
 import { SupportProvider } from "@/lib/api/support-context"
 import { CourseProvider } from "@/lib/api/course-context"
 import { BasketProvider } from "@/lib/api/basket-context" // ← NEW
+import { ContactProvider } from "@/lib/api/contact-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <SupportProvider>
                   <CourseProvider>
                     <BasketProvider>
-                      {children}
+                      <ContactProvider>
+              {children}
+            </ContactProvider>
                     </BasketProvider>
                   </CourseProvider>
                 </SupportProvider>

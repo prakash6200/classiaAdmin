@@ -183,7 +183,7 @@ export default function AllTransactionsPage() {
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">All Transactions</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-white">All Transactions</h2>
             <p className="text-muted-foreground">Monitor and manage all investment transactions</p>
           </div>
           <div className="flex space-x-2">

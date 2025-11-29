@@ -165,8 +165,8 @@ export default function CreateAMCPage() {
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Create New AMC</h2>
-            <p className="text-muted-foreground">Register a new Asset Management Company</p>
+            <h2 className="text-3xl font-bold tracking-tight text-white">Create New AMC</h2>
+            <p className="text-white/70">Register a new Asset Management Company</p>
           </div>
         </div>
 
@@ -181,11 +181,11 @@ export default function CreateAMCPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Basic Information</CardTitle>
-                <CardDescription>Enter the basic details of the AMC</CardDescription>
+                <CardDescription>Enter the basic details of the Partner</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">AMC Name *</Label>
+                  <Label htmlFor="name">RIA Name *</Label>
                   <Input
                     id="name"
                     value={formData.name}
@@ -470,7 +470,7 @@ export default function CreateAMCPage() {
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating AMC..." : "Create AMC"}
+              {isSubmitting ? "Creating AMC..." : "Create RIA"}
             </Button>
           </div>
         </form>

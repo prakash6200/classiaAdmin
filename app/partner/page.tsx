@@ -56,8 +56,9 @@ export default function AMCPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold  ">AMC Management</h2>
-            <p className="text-muted-foreground">Manage Asset Management Companies</p>
+            <h2 className="text-3xl font-bold text-white">RIA Management</h2>
+            <p className="text-white/70">Manage Registered Investment Advisors</p>
+
           </div>
           {hasPermission("amc:create") && (
             <Button onClick={() => router.push("/amc/register")} className="bg-primary text-primary-foreground hover:bg-primary/90">
@@ -68,7 +69,7 @@ export default function AMCPage() {
 
         {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3">
-          <DarkCard title="Total AMCs">
+          <DarkCard title="Total RIA">
             <div className="text-2xl font-bold">{loading ? "…" : pagination.total}</div>
             <p className="text-xs text-muted-foreground">{loading ? "…" : `${amcs.filter(a => a.status === "active").length} active`}</p>
           </DarkCard>
@@ -89,7 +90,7 @@ export default function AMCPage() {
         {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
 
         {/* Table */}
-        <DarkCard title="All AMCs" description="Complete list of registered Asset Management Companies">
+        <DarkCard title="All RIA" description="Complete list of registered Asset Management Companies">
           <div className="flex items-center mb-4">
             <div className="relative flex-1 max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

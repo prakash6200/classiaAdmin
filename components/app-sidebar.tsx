@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import {
   Building2,
   Users,
@@ -46,14 +46,14 @@ const navigationItems = [
   // ── ALL NAVIGATION ITEMS IN ONE LIST ───────────────────────────────────
   { title: "Dashboard", icon: Home, url: "/dashboard", permission: "dashboard:read" },
   {
-    title: "AMC Management",
+    title: "Partner Management",
     icon: Building2,
     permission: "amc:read",
     items: [
-      { title: "All AMCs", url: "/amc", permission: "amc:read" },
-      { title: "Create AMC", url: "/amc/create", permission: "amc:create" },
-      { title: "Commission Setup", url: "/amc/commission", permission: "amc:commission" },
-      { title: "AMC Reports", url: "/amc/reports", permission: "amc:reports" },
+      { title: "All Partner", url: "/partner", permission: "amc:read" },
+      { title: "Create Partner ", url: "/partner/create", permission: "amc:create" },
+      { title: "Commission Setup", url: "/partner/commission", permission: "amc:commission" },
+   
     ],
   },
   {
@@ -64,7 +64,7 @@ const navigationItems = [
       { title: "All Distributors", url: "/distributors", permission: "distributor:read" },
       { title: "Create Distributor", url: "/distributors/create", permission: "distributor:create" },
       { title: "Commission Tracking", url: "/distributors/commission", permission: "distributor:commission" },
-      { title: "Distributor Reports", url: "/distributors/reports", permission: "distributor:reports" },
+   
     ],
   },
   {
@@ -73,8 +73,6 @@ const navigationItems = [
     permission: "user:read",
     items: [
       { title: "All Users", url: "/users", permission: "user:read" },
-      { title: "KYC Status", url: "/users/kyc", permission: "user:kyc" },
-      { title: "Investment History", url: "/users/investments", permission: "user:investments" },
     ],
   },
   {
@@ -93,79 +91,48 @@ const navigationItems = [
     permission: "course:read",
     items: [
       { title: "All Courses", url: "/courses", permission: "course:read" },
-      // { title: "Create Course", url: "/courses/create", permission: "course:create" },
-      // { title: "Certificates", url: "/courses/certificates", permission: "course:certificates" },
-      // { title: "Progress Tracking", url: "/courses/progress", permission: "course:progress" },
     ],
   },
-  // {
-  //   title: "Co-User Access",
-  //   icon: Shield,
-  //   permission: "couser:read",
-  //   items: [
-  //     { title: "All Co-Users", url: "/co-users", permission: "couser:read" },
-  //     { title: "Create Co-User", url: "/co-users/create", permission: "couser:create" },
-  //     { title: "Access Logs", url: "/co-users/logs", permission: "couser:logs" },
-  //   ],
-  // },
- {
-  title: "Basket Management",
-  icon: ShoppingBasket,
-  permission: "basket:read",
-  items: [
-    { title: "All Baskets", url: "/baskets", permission: "basket:read" },
-    { title: "Stock Management", url: "/baskets/stocks", permission: "basket:stocks" },
-  ],
-},
+  {
+    title: "Basket Management",
+    icon: ShoppingBasket,
+    permission: "basket:read",
+    items: [
+      { title: "All Baskets", url: "/baskets", permission: "basket:read" },
+      { title: "Stock Management", url: "/baskets/stocks", permission: "basket:stocks" },
+    ],
+  },
   {
     title: "Support",
     icon: Headphones,
     permission: "support:read",
     items: [
       { title: "Ticket", url: "/support", permission: "support:read" },
-    
     ],
   },
-  // {
-  //   title: "Contact",
-  //   icon: Phone,
-  //   permission: "contact:read",
-  //   items: [
-  //     { title: "Contact Us", url: "/contact", permission: "contact:read" },
-  //     { title: "Branch Locator", url: "/contact/branches", permission: "contact:branches" },
-  //     { title: "Emergency", url: "/contact/emergency", permission: "contact:emergency" },
-  //   ],
-  // },
-  // {
-  //   title: "App Settings",
-  //   icon: Cog,
-  //   permission: "settings:read",
-  //   items: [
-  //     { title: "General Settings", url: "/settings", permission: "settings:read" },
-  //     { title: "Notifications", url: "/settings/notifications", permission: "settings:notifications" },
-  //     { title: "Security", url: "/settings/security", permission: "settings:security" },
-  //     { title: "Privacy Policy", url: "/settings/privacy", permission: "settings:privacy" },
-  //   ],
-  // },
-  // {
-  //   title: "Mutual Fund",
-  //   icon: TrendingUp,
-  //   permission: "mf:read",
-  //   items: [
-  //     { title: "All Funds", url: "/mutual-funds", permission: "mf:read" },
-  //     { title: "Top Performers", url: "/mutual-funds/top", permission: "mf:top" },
-  //     { title: "SIP Calculator", url: "/mutual-funds/sip", permission: "mf:sip" },
-  //     { title: "Compare Funds", url: "/mutual-funds/compare", permission: "mf:compare" },
-  //     { title: "Invest Now", url: "/mutual-funds/invest", permission: "mf:invest" },
-  //   ],
-  // },
+
+  {
+  title: "Contact",
+  icon: Phone,
+  permission: "contact:read",
+  items: [
+    { title: "Contact List", url: "/contact", permission: "contact:read" },
+  ],
+},
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const router = useRouter()
   const { user, logout, hasPermission } = useAuth()
 
   const filteredNavigation = navigationItems.filter((item) => hasPermission(item.permission))
+
+  // Handle logout with redirect
+  const handleLogout = async () => {
+    await logout()
+    router.push('/') // Redirect to home/login page
+  }
 
   return (
     <Sidebar
@@ -280,7 +247,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* ── FOOTER (Logout Works!) ── */}
+      {/* ── FOOTER (Logout with Redirect!) ── */}
       <SidebarFooter className="border-t border-[#d7b56d]/10 bg-gradient-to-t from-[#0a0a0f] to-[#0f0f1a]/50 backdrop-blur-md">
         <SidebarMenu>
           <SidebarMenuItem>
@@ -321,7 +288,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </DropdownMenuItem>
 
                 <DropdownMenuItem
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="rounded-lg text-red-400 hover:bg-red-950/50 hover:text-red-300 transition-all cursor-pointer"
                 >
                   <LogOut className="mr-2 h-4 w-4" />

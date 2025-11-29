@@ -168,8 +168,8 @@ export default function CommissionTrackingPage() {
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Commission Tracking</h2>
-            <p className="text-muted-foreground">Track and manage distributor commissions</p>
+            <h2 className="text-3xl font-bold tracking-tight text-white">Commission Tracking</h2>
+            <p className="text-white/70">Track and manage distributor commissions</p>
           </div>
           <div className="flex space-x-2">
             <Button variant="outline" onClick={() => exportData("CSV")}>

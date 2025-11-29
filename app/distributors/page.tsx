@@ -103,8 +103,8 @@ export default function DistributorsPage() {
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight">Distributor Management</h2>
-            <p className="text-muted-foreground">Manage mutual fund distributors</p>
+            <h2 className="text-3xl font-bold tracking-tight text-white">Distributor Management</h2>
+            <p className="text-white/70">Manage mutual fund distributors</p>
           </div>
           {hasPermission("distributor:create") && (
             <Button>

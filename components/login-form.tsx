@@ -170,11 +170,7 @@ export function LoginForm() {
               </Button>
 
               {/* Forgot Password */}
-              <div className="text-center">
-                <button className="text-sm text-gray-400 hover:text-[#d7b56d] transition-colors">
-                  Forgot your password?
-                </button>
-              </div>
+              
             </div>
           </CardContent>
         </Card>
