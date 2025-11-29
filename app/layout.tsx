@@ -1,3 +1,4 @@
+// app/layout.tsx
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/lib/api/auth-context"
@@ -6,9 +7,10 @@ import { AMCProvider } from "@/lib/api/amc-context"
 import { TransactionProvider } from "@/lib/api/transaction-context"
 import { SupportProvider } from "@/lib/api/support-context"
 import { CourseProvider } from "@/lib/api/course-context"
-import { BasketProvider } from "@/lib/api/basket-context" // ← NEW
+import { BasketProvider } from "@/lib/api/basket-context"
 import { ContactProvider } from "@/lib/api/contact-context"
 import { ExploreProvider } from "@/lib/api/explore-context"
+import { SettingsProvider } from "@/lib/api/settings-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,11 +26,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <CourseProvider>
                     <BasketProvider>
                       <ContactProvider>
-                                   <ExploreProvider>
-                          {children}
+                        <ExploreProvider>
+                          <SettingsProvider>
+                            {children}
+                          </SettingsProvider>
                         </ExploreProvider>
-
-            </ContactProvider>
+                      </ContactProvider>
                     </BasketProvider>
                   </CourseProvider>
                 </SupportProvider>

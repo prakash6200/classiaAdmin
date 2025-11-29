@@ -45,15 +45,15 @@ import { useAuth } from "@/lib/api/auth-context"
 const navigationItems = [
   // ── ALL NAVIGATION ITEMS IN ONE LIST ───────────────────────────────────
 
-
-  {
-  title: "Explore",
-  icon: Sparkles,
-  url: "/explore",
-  permission: "explore:read"
-},
+    {
+    title: "Explore",
+    icon: Sparkles,
+    url: "/explore",
+    permission: "explore:read"
+  },
 
   { title: "Dashboard", icon: Home, url: "/dashboard", permission: "dashboard:read" },
+  
   {
     title: "Partner Management",
     icon: Building2,
@@ -62,9 +62,9 @@ const navigationItems = [
       { title: "All Partner", url: "/partner", permission: "amc:read" },
       { title: "Create Partner ", url: "/partner/create", permission: "amc:create" },
       { title: "Commission Setup", url: "/partner/commission", permission: "amc:commission" },
-   
     ],
   },
+  
   {
     title: "Distributor Management",
     icon: Users,
@@ -73,9 +73,9 @@ const navigationItems = [
       { title: "All Distributors", url: "/distributors", permission: "distributor:read" },
       { title: "Create Distributor", url: "/distributors/create", permission: "distributor:create" },
       { title: "Commission Tracking", url: "/distributors/commission", permission: "distributor:commission" },
-   
     ],
   },
+  
   {
     title: "User Management",
     icon: UserPlus,
@@ -84,6 +84,7 @@ const navigationItems = [
       { title: "All Users", url: "/users", permission: "user:read" },
     ],
   },
+  
   {
     title: "Transaction Management",
     icon: CreditCard,
@@ -94,6 +95,7 @@ const navigationItems = [
       { title: "Transaction Reports", url: "/transactions/reports", permission: "transaction:reports" },
     ],
   },
+  
   {
     title: "Courses",
     icon: BookOpen,
@@ -102,6 +104,7 @@ const navigationItems = [
       { title: "All Courses", url: "/courses", permission: "course:read" },
     ],
   },
+  
   {
     title: "Basket Management",
     icon: ShoppingBasket,
@@ -111,6 +114,7 @@ const navigationItems = [
       { title: "Stock Management", url: "/baskets/stocks", permission: "basket:stocks" },
     ],
   },
+  
   {
     title: "Support",
     icon: Headphones,
@@ -121,18 +125,29 @@ const navigationItems = [
   },
 
   {
-  title: "Contact",
-  icon: Phone,
-  permission: "contact:read",
+    title: "Contact",
+    icon: Phone,
+    permission: "contact:read",
+    items: [
+      { title: "Contact List", url: "/contact", permission: "contact:read" },
+    ],
+  },
+
+
+  {
+  title: "Settings",
+  icon: Settings,
+  permission: "settings:read",
   items: [
-    { title: "Contact List", url: "/contact", permission: "contact:read" },
+    { title: "App Management", url: "/settings", permission: "settings:read" },
   ],
 },
-
-
-
-
 ]
+
+
+
+
+
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
